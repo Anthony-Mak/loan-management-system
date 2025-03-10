@@ -41,7 +41,7 @@
         .checkbox-group label {
             margin-right: 20px;
         }
-        input[type="text"], input[type="number"], input[type="date"], input[type="tel"], input[type="email"], textarea {
+        input[type="text"], input[type="number"], input[type="date"], input[type="tel"], input[type="email"], textarea, select {
             width: calc(100% - 16px);
             padding: 8px;
             margin: 5px 0;
@@ -137,14 +137,15 @@
                 <td><input type="text"></td>
             </tr>
             <tr>
-                <td>Marital Status (Tick applicable)</td>
+                <td>Marital Status</td>
                 <td>
-                    <div class="checkbox-group">
-                        <label><input type="checkbox"> Married</label>
-                        <label><input type="checkbox"> Single</label>
-                        <label><input type="checkbox"> Divorced</label>
-                        <label><input type="checkbox"> Widowed</label>
-                    </div>
+                    <select>
+                        <option value="">Select</option>
+                        <option value="married">Married</option>
+                        <option value="single">Single</option>
+                        <option value="divorced">Divorced</option>
+                        <option value="widowed">Widowed</option>
+                    </select>
                 </td>
             </tr>
             <tr>
@@ -160,14 +161,15 @@
                 <td>Year(s): <input type="number"> Month(s): <input type="number"></td>
             </tr>
             <tr>
-                <td>Accommodation Type (Tick applicable)</td>
+                <td>Accommodation Type</td>
                 <td>
-                    <div class="checkbox-group">
-                        <label><input type="checkbox"> Owned</label>
-                        <label><input type="checkbox"> Rented</label>
-                        <label><input type="checkbox"> Employer Provided</label>
-                        <label><input type="checkbox"> Staying with Parents</label>
-                    </div>
+                    <select>
+                        <option value="">Select</option>
+                        <option value="owned">Owned</option>
+                        <option value="rented">Rented</option>
+                        <option value="employer">Employer Provided</option>
+                        <option value="parents">Staying with Parents</option>
+                    </select>
                 </td>
             </tr>
             <tr>
@@ -265,7 +267,7 @@
             </tr>
             <tr>
                 <td>Type of Account (s)</td>
-                <td><input type="number"></td>
+                <td><input type></td>
+                
             </tr>
-            
-        </table>>
+        </table>
