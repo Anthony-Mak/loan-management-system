@@ -1,0 +1,271 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>STAFF LOAN APPLICATION FORM</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            line-height: 1.6;
+            margin: 20px;
+            background-color: #f4f4f4;
+        }
+        .container {
+            width: 90%;
+            max-width: 800px;
+            margin: auto;
+            overflow: hidden;
+            padding: 20px;
+            background-color: white;
+            border-radius: 8px;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-bottom: 20px;
+        }
+        th, td {
+            border: 1px solid #ddd;
+            padding: 8px;
+            text-align: left;
+        }
+        th {
+            background-color: #f2f2f2;
+        }
+        h2, h3 {
+            color: #333;
+            margin-bottom: 10px;
+        }
+        .checkbox-group label {
+            margin-right: 20px;
+        }
+        input[type="text"], input[type="number"], input[type="date"], input[type="tel"], input[type="email"], textarea {
+            width: calc(100% - 16px);
+            padding: 8px;
+            margin: 5px 0;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            box-sizing: border-box;
+            font-size: 1em;
+        }
+        textarea {
+            resize: vertical;
+        }
+        label {
+            display: inline-block;
+            margin-right: 10px;
+            color: #555;
+        }
+        input[type="radio"], input[type="checkbox"] {
+            margin-right: 5px;
+        }
+        p {
+            margin-bottom: 10px;
+        }
+        label {
+            font-weight: bold;
+            margin-top: 10px;
+            display: block;
+            color: #333;
+        }
+        input[type="text"],
+        input[type="password"],
+        input[type="email"],
+        input[type="number"],
+        input[type="date"],
+        select,
+        textarea {
+            width: calc(100% - 12px);
+            padding: 10px;
+            margin-top: 5px;
+            margin-bottom: 20px;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+            box-sizing: border-box;
+            font-size: 1em;
+        }
+        button {
+            background-color: #007bff;
+            color: white;
+            padding: 10px 20px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            transition: background-color 0.3s ease;
+        }
+        button:hover {
+            background-color: #0056b3;
+        }
+        h2{
+            color: #333;
+            margin-bottom: 1em;
+        }
+        @media (max-width: 600px) {
+            .container {
+                padding: 10px;
+                width: 95%;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h2>STAFF LOAN APPLICATION FORM</h2>
+
+        <h3>Applicant's Information</h3>
+        <table>
+            <tr>
+                <td>Title (Prof/Dr/Mr/Mrs/Ms)</td>
+                <td><input type="text"></td>
+            </tr>
+            <tr>
+                <td>Name in Full</td>
+                <td><input type="text"></td>
+            </tr>
+            <tr>
+                <td>ID/Passport/Driver’s License No.</td>
+                <td><input type="text"></td>
+            </tr>
+            <tr>
+                <td>Date of Birth</td>
+                <td><input type="date"></td>
+            </tr>
+            <tr>
+                <td>Gender</td>
+                <td><input type="text"></td>
+            </tr>
+            <tr>
+                <td>Marital Status (Tick applicable)</td>
+                <td>
+                    <div class="checkbox-group">
+                        <label><input type="checkbox"> Married</label>
+                        <label><input type="checkbox"> Single</label>
+                        <label><input type="checkbox"> Divorced</label>
+                        <label><input type="checkbox"> Widowed</label>
+                    </div>
+                </td>
+            </tr>
+            <tr>
+                <td>Number of Dependents</td>
+                <td><input type="number"></td>
+            </tr>
+            <tr>
+                <td>Physical Home Address</td>
+                <td><input type="text"></td>
+            </tr>
+            <tr>
+                <td>Length of Stay-at-Home Address</td>
+                <td>Year(s): <input type="number"> Month(s): <input type="number"></td>
+            </tr>
+            <tr>
+                <td>Accommodation Type (Tick applicable)</td>
+                <td>
+                    <div class="checkbox-group">
+                        <label><input type="checkbox"> Owned</label>
+                        <label><input type="checkbox"> Rented</label>
+                        <label><input type="checkbox"> Employer Provided</label>
+                        <label><input type="checkbox"> Staying with Parents</label>
+                    </div>
+                </td>
+            </tr>
+            <tr>
+                <td>Postal Address (different from above)</td>
+                <td><input type="text"></td>
+            </tr>
+            <tr>
+                <td>Telephone Numbers</td>
+                <td>Tel: <input type="tel"> Cell: <input type="tel"></td>
+            </tr>
+            <tr>
+                <td>Email</td>
+                <td><input type="email"></td>
+            </tr>
+            <tr>
+                <td>Next of Kin</td>
+                <td><input type="text"></td>
+            </tr>
+            <tr>
+                <td>Next of Kin Address</td>
+                <td><input type="text"></td>
+            </tr>
+            <tr>
+                <td>Next of Kin Telephone Numbers</td>
+                <td>Tel: <input type="tel"> Cell: <input type="tel"></td>
+            </tr>
+        </table>
+
+        <h3>Employment /Business Details (Applicant)</h3>
+        <table>
+            <tr>
+                <td>Period with Employer</td>
+                <td><input type="text"></td>
+            </tr>
+            <tr>
+                <td>Designation</td>
+                <td>Post: <input type="text"> Department: <input type="text"></td>
+            </tr>
+            <tr>
+                <td>Monthly Salary</td>
+                <td>Gross (<span class="math-inline">\)\: <input type\="number"\> Net \(</span>): <input type="number"></td>
+            </tr>
+        </table>
+
+        <h3>APPLICANT'S BANKING DETAILS</h3>
+        <table>
+            <tr>
+                <td>Any Account with ZWMB Bank?</td>
+                <td>
+                    <label><input type="radio" name="zwmb_account" value="yes"> Yes</label>
+                    <label><input type="radio" name="zwmb_account" value="no"> No</label>
+                    <br>
+                    If Yes number of years with ZWMB: <input type="number">
+                </td>
+            </tr>
+            <tr>
+                <td>Branch</td>
+                <td><input type="text"></td>
+            </tr>
+            <tr>
+                <td>Account Number</td>
+                <td><input type="text"></td>
+            </tr>
+            <tr>
+                <td>Have you previously taken any loan with ZWMB</td>
+                <td>
+                    <label><input type="radio" name="zwmb_loan" value="yes"> Yes</label>
+                    <label><input type="radio" name="zwmb_loan" value="no"> No</label>
+                    <br>
+                    If Yes Loan Amount (<span class="math-inline">\) <input type\="number"\>
+</td\>
+</tr\>
+<tr\>
+<td\>Current balance \(</span>)</td>
+                <td><input type="number"></td>
+            </tr>
+            <tr>
+                <td>taken on</td>
+                <td><input type="date"></td>
+            </tr>
+            <tr>
+                <td>Maturity Date</td>
+                <td><input type="date"></td>
+            </tr>
+            <tr>
+                <td>0r currently being repaid at ($) per month</td>
+                <td><input type="number"></td>
+            </tr>
+        </table>
+        <h3>My other banking details</h3>
+        <table>
+            <tr>
+                <td>Bank & Branch</td>
+                <td><input type="text"></td>
+            </tr>
+            <tr>
+                <td>Type of Account (s)</td>
+                <td><input type="number"></td>
+            </tr>
+            
+        </table>>
