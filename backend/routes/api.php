@@ -6,10 +6,15 @@ use App\Http\Controllers\EmployeeController;
 use App\Http\Controllers\LoanApplicationController;
 use App\Http\Controllers\AdminController;
 use Laravel\Sanctum\Http\Middleware\EnsureFrontendRequestsAreStateful;
+use App\Http\Controllers\ApiController;
+
 
 // Authentication routes
 Route::post('/login', [AuthController::class, 'login']);
 Route::post('/logout', [AuthController::class, 'logout'])->middleware('auth:api');
+
+//Change password
+Route::post('/change-password', [AuthController::class, 'changePassword'])->middleware('auth');
 
 // Employee routes
 Route::middleware(['auth:api', 'role:employee'])->group(function () {
@@ -33,3 +38,5 @@ Route::middleware([
 ])->group(function () {
     // Your protected API routes here
 });
+
+

@@ -4,23 +4,34 @@ namespace App\Http\Middleware;
 
 use Closure;
 use Illuminate\Http\Request;
-use Symfony\Component\HttpFoundation\Response;
+use Illuminate\Support\Facades\Auth;
 
 class CheckRole
 {
-    /**
+     /**
      * Handle an incoming request.
      *
-     * @param  \Closure(\Illuminate\Http\Request): (\Symfony\Component\HttpFoundation\Response)  $next
+     * @param  \Illuminate\Http\Request  $request
+     * @param  \Closure  $next
+     * @param  string|array  ...$roles
+     * @return mixed
      */
-    public function handle(Request $request, Closure $next, ...$roles): Response
+    public function handle(Request $request, Closure $next, ...$roles)
     {
-        if (! $request->user() || ! in_array($request->user()->role, $roles)) {
-            return response()->json([
-                'message' => 'Unauthorized. You do not have access to this resource.'
-            ], 403);
+        if (!Auth::check()) {
+            return redirect('login');
         }
-
-        return $next($request);
+        $user = Auth::user();
+        
+        foreach ($roles as $role) {
+            if ($user->role === $role) {
+                return $next($request);
+            }
+        }
+         // If the request expects JSON (API request)
+         if ($request->expectsJson()) {
+            return response()->json(['error' => 'Unauthorized'], 403);
+        }
+        return redirect()->back()->with('error', 'You do not have permission to access this resource.');    
     }
 }

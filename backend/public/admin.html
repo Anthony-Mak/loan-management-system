@@ -3,6 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="csrf-token" content="">
   <title>Loan Management System - Admin Portal</title>
   <link rel="stylesheet" href="styles.css">
 </head>
@@ -21,6 +22,26 @@
     <div id="admin-section">
       <h2>Loan Applications</h2>
       <div id="admin-loans"></div>
+      <div id="applications-list"></div>
+      
+      <div class="change-password-section">
+        <h3>Change Password</h3>
+        <div id="password-change-error" class="error-message" style="display: none;"></div>
+        <div id="password-change-success" class="success-message" style="display: none;"></div>
+        <form id="change-password-form">
+          <label for="current_password">Current Password:</label>
+          <input type="password" id="current_password" name="current_password" required>
+          
+          <label for="new_password">New Password:</label>
+          <input type="password" id="new_password" name="new_password" required>
+          
+          <label for="new_password_confirmation">Confirm New Password:</label>
+          <input type="password" id="new_password_confirmation" name="new_password_confirmation" required>
+          
+          <button type="submit">Change Password</button>
+        </form>
+      </div>
+      
       <button onclick="logout()" class="logout-btn">Logout</button>
     </div>
   </div>
@@ -40,6 +61,9 @@
     
     // Elements
     const adminLoans = document.getElementById('admin-loans');
+    const changePasswordForm = document.getElementById('change-password-form');
+    const passwordChangeError = document.getElementById('password-change-error');
+    const passwordChangeSuccess = document.getElementById('password-change-success');
 
     // Render Admin Loans
     function renderAdminLoans() {
@@ -90,55 +114,119 @@
       }
     }
 
-    // Logout Functionality
-    function logout() {
-      localStorage.removeItem('currentUser');
-      window.location.href = 'index.html';
-    }
-
-    // Load loans on page load
-    renderAdminLoans();
-
+    // Fetch API Loan Applications
     async function loadApplications() {
-    try {
+      try {
         const response = await fetch('/api/admin/applications', {
-            headers: {
-                'Authorization': `Bearer ${localStorage.getItem('auth_token')}`,
-                'Accept': 'application/json'
-            }
+          headers: {
+            'Authorization': `Bearer ${localStorage.getItem('auth_token')}`,
+            'Accept': 'application/json'
+          }
         });
         
         const applications = await response.json();
         renderApplications(applications.data);
-    } catch (error) {
+      } catch (error) {
         console.error('Error loading applications:', error);
+      }
     }
-}
 
-function renderApplications(applications) {
-    const container = document.getElementById('applications-list');
-    container.innerHTML = applications.map(app => `
+    function renderApplications(applications) {
+      const container = document.getElementById('applications-list');
+      container.innerHTML = applications.map(app => `
         <div class="application">
-            <div class="app-header">
-                <span>#${app.loan_id}</span>
-                <span class="status ${app.status.toLowerCase()}">${app.status}</span>
+          <div class="app-header">
+            <span>#${app.loan_id}</span>
+            <span class="status ${app.status.toLowerCase()}">${app.status}</span>
+          </div>
+          <div class="app-body">
+            <p>Employee: ${app.employee.full_name}</p>
+            <p>Amount: $${app.amount}</p>
+            <p>Purpose: ${app.purpose}</p>
+            <div class="admin-actions">
+              <select onchange="updateStatus(${app.loan_id}, this.value)">
+                <option ${app.status === 'Pending' ? 'selected' : ''}>Pending</option>
+                <option ${app.status === 'Approved' ? 'selected' : ''}>Approved</option>
+                <option ${app.status === 'Rejected' ? 'selected' : ''}>Rejected</option>
+              </select>
+              <button onclick="showNotesModal(${app.loan_id})">Add Notes</button>
             </div>
-            <div class="app-body">
-                <p>Employee: ${app.employee.full_name}</p>
-                <p>Amount: $${app.amount}</p>
-                <p>Purpose: ${app.purpose}</p>
-                <div class="admin-actions">
-                    <select onchange="updateStatus(${app.loan_id}, this.value)">
-                        <option ${app.status === 'Pending' ? 'selected' : ''}>Pending</option>
-                        <option ${app.status === 'Approved' ? 'selected' : ''}>Approved</option>
-                        <option ${app.status === 'Rejected' ? 'selected' : ''}>Rejected</option>
-                    </select>
-                    <button onclick="showNotesModal(${app.loan_id})">Add Notes</button>
-                </div>
-            </div>
+          </div>
         </div>
-    `).join('');
-}
+      `).join('');
+    }
+    
+    function updateStatus(loanId, newStatus) {
+      // Implement the update status functionality
+      console.log(`Updating loan ${loanId} to ${newStatus}`);
+      // Add API call here
+    }
+    
+    function showNotesModal(loanId) {
+      // Implement the notes modal functionality
+      console.log(`Showing notes modal for loan ${loanId}`);
+      // Add modal implementation here
+    }
+
+    // Change Password Handler
+    changePasswordForm.addEventListener('submit', (e) => {
+      e.preventDefault();
+      
+      // Clear previous messages
+      passwordChangeError.style.display = 'none';
+      passwordChangeSuccess.style.display = 'none';
+      
+      const currentPassword = document.getElementById('current_password').value;
+      const newPassword = document.getElementById('new_password').value;
+      const newPasswordConfirmation = document.getElementById('new_password_confirmation').value;
+      
+      fetch('/api/change-password', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content'),
+          'Authorization': 'Bearer ' + localStorage.getItem('auth_token')
+        },
+        body: JSON.stringify({
+          current_password: currentPassword,
+          new_password: newPassword,
+          new_password_confirmation: newPasswordConfirmation
+        })
+      })
+      .then(response => response.json())
+      .then(data => {
+        if (data.success) {
+          passwordChangeSuccess.textContent = data.message;
+          passwordChangeSuccess.style.display = 'block';
+          changePasswordForm.reset();
+        } else {
+          passwordChangeError.textContent = data.message;
+          passwordChangeError.style.display = 'block';
+        }
+      })
+      .catch(error => {
+        console.error('Error:', error);
+        passwordChangeError.textContent = 'An error occurred. Please try again.';
+        passwordChangeError.style.display = 'block';
+      });
+    });
+
+    // Logout Functionality
+    function logout() {
+      localStorage.removeItem('currentUser');
+      localStorage.removeItem('auth_token');
+      window.location.href = 'index.html';
+    }
+
+    // Load data on page load
+    renderAdminLoans();
+    
+    // Try to load API applications if available
+    try {
+      loadApplications();
+    } catch (error) {
+      console.log('Using local storage applications only');
+    }
   </script>
   
 </body>

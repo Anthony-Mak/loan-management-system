@@ -3,8 +3,177 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="csrf-token" content="YOUR_CSRF_TOKEN_HERE">
   <title>Loan Management System - Employee Portal</title>
-  <link rel="stylesheet" href="style.css">
+  <style>
+    /* Base styles */
+    body {
+      font-family: Arial, sans-serif;
+      line-height: 1.6;
+      margin: 0;
+      padding: 0;
+      background-color: #f4f7f9;
+      color: #333;
+    }
+    
+    .container {
+      max-width: 1200px;
+      margin: 0 auto;
+      padding: 20px;
+    }
+    
+    header {
+      background-color: #0056b3;
+      color: white;
+      padding: 20px;
+      text-align: center;
+    }
+    
+    h1, h2, h3 {
+      margin-top: 0;
+    }
+    
+    /* User section */
+    .user-info {
+      background-color: #e9ecef;
+      padding: 15px;
+      border-radius: 5px;
+      margin-bottom: 20px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+    
+    /* Loan items */
+    .loan-item {
+      background-color: white;
+      border: 1px solid #ddd;
+      border-radius: 5px;
+      padding: 15px;
+      margin-bottom: 15px;
+    }
+    
+    .loan-card {
+      background-color: white;
+      border: 1px solid #ddd;
+      border-radius: 5px;
+      padding: 15px;
+      margin-bottom: 15px;
+      box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    }
+    
+    /* Status styles */
+    .status {
+      padding: 3px 8px;
+      border-radius: 3px;
+      font-weight: bold;
+    }
+    
+    .approved {
+      background-color: #d4edda;
+      color: #155724;
+    }
+    
+    .pending {
+      background-color: #fff3cd;
+      color: #856404;
+    }
+    
+    .rejected {
+      background-color: #f8d7da;
+      color: #721c24;
+    }
+    
+    /* Buttons */
+    button {
+      background-color: #0056b3;
+      color: white;
+      border: none;
+      padding: 10px 15px;
+      border-radius: 5px;
+      cursor: pointer;
+      font-size: 16px;
+      margin-right: 10px;
+      margin-bottom: 10px;
+    }
+    
+    button:hover {
+      background-color: #003d82;
+    }
+    
+    .apply-loan-btn {
+      background-color: #28a745;
+    }
+    
+    .apply-loan-btn:hover {
+      background-color: #218838;
+    }
+    
+    .logout-btn {
+      background-color: #dc3545;
+    }
+    
+    .logout-btn:hover {
+      background-color: #c82333;
+    }
+    
+    /* Change Password Section */
+    .change-password-section {
+      background-color: white;
+      border: 1px solid #ddd;
+      border-radius: 5px;
+      padding: 20px;
+      margin-top: 30px;
+      margin-bottom: 30px;
+    }
+    
+    .change-password-section h3 {
+      margin-top: 0;
+      color: #0056b3;
+      border-bottom: 1px solid #eee;
+      padding-bottom: 10px;
+    }
+    
+    .change-password-section form {
+      display: flex;
+      flex-direction: column;
+    }
+    
+    .change-password-section label {
+      margin-top: 15px;
+      margin-bottom: 5px;
+      font-weight: bold;
+    }
+    
+    .change-password-section input {
+      padding: 10px;
+      border: 1px solid #ddd;
+      border-radius: 4px;
+      margin-bottom: 15px;
+    }
+    
+    .change-password-section button {
+      margin-top: 10px;
+      align-self: flex-start;
+    }
+    
+    /* Message styles */
+    .error-message {
+      background-color: #f8d7da;
+      color: #721c24;
+      padding: 10px;
+      border-radius: 4px;
+      margin-bottom: 15px;
+    }
+    
+    .success-message {
+      background-color: #d4edda;
+      color: #155724;
+      padding: 10px;
+      border-radius: 4px;
+      margin-bottom: 15px;
+    }
+  </style>
 </head>
 <body>
 
@@ -16,6 +185,26 @@
   <div class="container">
     <div class="user-info">
       <p>Welcome, <span id="username-display">Employee</span>!</p>
+      <button id="show-password-form" onclick="togglePasswordForm()">Change Password</button>
+    </div>
+
+    <!-- Change Password Section -->
+    <div class="change-password-section" id="change-password-section" style="display: none;">
+      <h3>Change Password</h3>
+      <div id="password-change-error" class="error-message" style="display: none;"></div>
+      <div id="password-change-success" class="success-message" style="display: none;"></div>
+      <form id="change-password-form">
+        <label for="current_password">Current Password:</label>
+        <input type="password" id="current_password" name="current_password" required>
+        
+        <label for="new_password">New Password:</label>
+        <input type="password" id="new_password" name="new_password" required>
+        
+        <label for="new_password_confirmation">Confirm New Password:</label>
+        <input type="password" id="new_password_confirmation" name="new_password_confirmation" required>
+        
+        <button type="submit">Change Password</button>
+      </form>
     </div>
 
     <div id="employee-section">
@@ -43,6 +232,74 @@
 
     // Elements
     const employeeLoans = document.getElementById('employee-loans');
+    const changePasswordSection = document.getElementById('change-password-section');
+    const changePasswordForm = document.getElementById('change-password-form');
+    const passwordChangeError = document.getElementById('password-change-error');
+    const passwordChangeSuccess = document.getElementById('password-change-success');
+
+    // Toggle Password Form
+    function togglePasswordForm() {
+      if (changePasswordSection.style.display === 'none') {
+        changePasswordSection.style.display = 'block';
+      } else {
+        changePasswordSection.style.display = 'none';
+        // Clear form and messages when hiding
+        changePasswordForm.reset();
+        passwordChangeError.style.display = 'none';
+        passwordChangeSuccess.style.display = 'none';
+      }
+    }
+
+    // Handle Password Change Form Submit
+    changePasswordForm.addEventListener('submit', (e) => {
+      e.preventDefault();
+      
+      // Clear previous messages
+      passwordChangeError.style.display = 'none';
+      passwordChangeSuccess.style.display = 'none';
+      
+      const currentPassword = document.getElementById('current_password').value;
+      const newPassword = document.getElementById('new_password').value;
+      const newPasswordConfirmation = document.getElementById('new_password_confirmation').value;
+      
+      // Validate passwords
+      if (newPassword !== newPasswordConfirmation) {
+        passwordChangeError.textContent = 'New passwords do not match.';
+        passwordChangeError.style.display = 'block';
+        return;
+      }
+      
+      // Send request to server
+      fetch('/api/change-password', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content'),
+          'Authorization': 'Bearer ' + localStorage.getItem('auth_token')
+        },
+        body: JSON.stringify({
+          current_password: currentPassword,
+          new_password: newPassword,
+          new_password_confirmation: newPasswordConfirmation
+        })
+      })
+      .then(response => response.json())
+      .then(data => {
+        if (data.success) {
+          passwordChangeSuccess.textContent = data.message || 'Password changed successfully.';
+          passwordChangeSuccess.style.display = 'block';
+          changePasswordForm.reset();
+        } else {
+          passwordChangeError.textContent = data.message || 'Failed to change password.';
+          passwordChangeError.style.display = 'block';
+        }
+      })
+      .catch(error => {
+        console.error('Error:', error);
+        passwordChangeError.textContent = 'An error occurred. Please try again.';
+        passwordChangeError.style.display = 'block';
+      });
+    });
 
     // Redirect to Loan Form
     function redirectToLoanForm() {
@@ -73,42 +330,63 @@
         employeeLoans.appendChild(div);
       });
     }
+
+    // Load Loan History from API
     async function loadLoanHistory() {
-    try {
+      try {
         const response = await fetch('/api/employee/loans', {
-            headers: {
-                'Authorization': `Bearer ${localStorage.getItem('auth_token')}`,
-                'Accept': 'application/json'
-            }
+          headers: {
+            'Authorization': `Bearer ${localStorage.getItem('auth_token')}`,
+            'Accept': 'application/json'
+          }
         });
         
-        const loans = await response.json();
-        renderLoans(loans);
-    } catch (error) {
+        if (response.ok) {
+          const loans = await response.json();
+          renderLoans(loans);
+        } else {
+          console.error('Failed to load loans:', response.statusText);
+        }
+      } catch (error) {
         console.error('Error loading loan history:', error);
+      }
     }
-}
 
-function renderLoans(loans) {
-    const container = document.getElementById('loan-history');
-    container.innerHTML = loans.map(loan => `
+    function renderLoans(loans) {
+      const container = document.getElementById('employee-loans');
+      
+      if (!loans || loans.length === 0) {
+        container.innerHTML = '<p>No loan applications found.</p>';
+        return;
+      }
+      
+      container.innerHTML = loans.map(loan => `
         <div class="loan-card">
-            <h3>Loan #${loan.loan_id}</h3>
-            <p>Amount: $${loan.amount}</p>
-            <p>Status: <span class="status ${loan.status.toLowerCase()}">${loan.status}</span></p>
-            <p>Applied: ${new Date(loan.application_date).toLocaleDateString()}</p>
+          <h3>Loan #${loan.loan_id}</h3>
+          <p><strong>Amount:</strong> $${loan.amount}</p>
+          <p><strong>Status:</strong> <span class="status ${loan.status.toLowerCase()}">${loan.status}</span></p>
+          <p><strong>Applied:</strong> ${new Date(loan.application_date).toLocaleDateString()}</p>
+          <p><strong>Review:</strong> ${loan.review || 'No review yet'}</p>
         </div>
-    `).join('');
-}
+      `).join('');
+    }
 
     // Logout Functionality
     function logout() {
       localStorage.removeItem('currentUser');
+      localStorage.removeItem('auth_token');
       window.location.href = 'index.html';
     }
 
-    // Load loans on page load
-    renderEmployeeLoans();
+    // Initial load - try API first, fallback to localStorage
+    if (localStorage.getItem('auth_token')) {
+      loadLoanHistory().catch(() => {
+        // If API fails, fallback to localStorage
+        renderEmployeeLoans();
+      });
+    } else {
+      renderEmployeeLoans();
+    }
   </script>
 </body>
 </html>

@@ -78,6 +78,7 @@ Route::middleware(['auth', 'role:admin,manager'])->prefix('admin')->group(functi
         return view('admin.applications');
     })->name('admin.applications');
     
+    
     Route::get('/employees', function () {
         return view('admin.employees');
     })->name('admin.employees');
