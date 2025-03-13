@@ -173,21 +173,25 @@ class ApiController extends Controller
      * Download loan application PDF
      */
     public function downloadLoanPDF($loanId)
-    {
-        try {
-            $loanApplication = LoanApplication::findOrFail($loanId);
-            $pdf = $this->pdfService->generateLoanApplicationPDF($loanApplication);
-            
-            return $pdf->download('loan_application_' . $loanId . '.pdf');
-        } catch (\Exception $e) {
-            return response()->json([
-                'status' => 'error',
-                'message' => 'Failed to generate PDF',
-                'error' => $e->getMessage()
-            ], 500);
-        }
+{
+    try {
+        $loanApplication = LoanApplication::where('loan_id', $loanId)->firstOrFail();
+        $pdf = $this->pdfService->generateLoanApplicationPDF($loanApplication);
+        
+        return $pdf->download('loan_application_' . $loanId . '.pdf');
+    } catch (\Illuminate\Database\Eloquent\ModelNotFoundException $e) {
+        return response()->json([
+            'status' => 'error',
+            'message' => 'Loan application not found'
+        ], 404);
+    } catch (\Exception $e) {
+        return response()->json([
+            'status' => 'error',
+            'message' => 'Failed to generate PDF',
+            'error' => $e->getMessage()
+        ], 500);
     }
-    
+}
     /**
      * Check application status
      */
