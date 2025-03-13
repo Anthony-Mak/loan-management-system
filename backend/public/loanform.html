@@ -1,0 +1,414 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>STAFF LOAN APPLICATION FORM</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            line-height: 1.6;
+            margin: 20px;
+            background-color: #f4f4f4;
+        }
+        .container {
+            width: 90%;
+            max-width: 800px;
+            margin: auto;
+            overflow: hidden;
+            padding: 20px;
+            background-color: white;
+            border-radius: 8px;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-bottom: 20px;
+        }
+        th, td {
+            border: 1px solid #ddd;
+            padding: 8px;
+            text-align: left;
+        }
+        th {
+            background-color: #f2f2f2;
+        }
+        h2, h3 {
+            color: #333;
+            margin-bottom: 10px;
+        }
+        .checkbox-group label {
+            margin-right: 20px;
+        }
+        input[type="text"], input[type="number"], input[type="date"], input[type="tel"], input[type="email"], textarea, select {
+            width: calc(100% - 16px);
+            padding: 8px;
+            margin: 5px 0;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            box-sizing: border-box;
+            font-size: 1em;
+        }
+        textarea {
+            resize: vertical;
+        }
+        label {
+            display: inline-block;
+            margin-right: 10px;
+            color: #555;
+        }
+        input[type="radio"], input[type="checkbox"] {
+            margin-right: 5px;
+        }
+        p {
+            margin-bottom: 10px;
+        }
+        label {
+            font-weight: bold;
+            margin-top: 10px;
+            display: block;
+            color: #333;
+        }
+        input[type="text"],
+        input[type="password"],
+        input[type="email"],
+        input[type="number"],
+        input[type="date"],
+        select,
+        textarea {
+            width: calc(100% - 12px);
+            padding: 10px;
+            margin-top: 5px;
+            margin-bottom: 20px;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+            box-sizing: border-box;
+            font-size: 1em;
+        }
+        button {
+            background-color: #007bff;
+            color: white;
+            padding: 10px 20px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            transition: background-color 0.3s ease;
+        }
+        button:hover {
+            background-color: #0056b3;
+        }
+        h2{
+            color: #333;
+            margin-bottom: 1em;
+        }
+        @media (max-width: 600px) {
+            .container {
+                padding: 10px;
+                width: 95%;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+       <form><h2>STAFF LOAN APPLICATION FORM</h2>
+
+        <h3>Applicant's Information</h3>
+        <table>
+            <tr>
+                <td>Title (Prof/Dr/Mr/Mrs/Ms)</td>
+                <td>
+                    <select>
+                        <option value="Prof">Prof</option>
+                        <option value="Dr">Dr</option>
+                        <option value="Mr">Mr</option>
+                        <option value="Mrs">Mrs</option>
+                        <option value="Ms">Ms</option>
+                        <option value="">(Select a title)</option>
+                    </select>
+                </td>
+            </tr>
+            <tr>
+                <td>Name in Full</td>
+                <td><input type="text"></td>
+            </tr>
+            <tr>
+                <td>ID/Passport/Driver’s License No.</td>
+                <td><input type="text"></td>
+            </tr>
+            <tr>
+                <td>Date of Birth</td>
+                <td><input type="date"></td>
+            </tr>
+            <tr>
+                <td>Gender</td>
+                <td><input type="text"></td>
+            </tr>
+            <tr>
+                <td>Marital Status</td>
+                <td>
+                    <select>
+                        <option value="">Select</option>
+                        <option value="married">Married</option>
+                        <option value="single">Single</option>
+                        <option value="divorced">Divorced</option>
+                        <option value="widowed">Widowed</option>
+                    </select>
+                </td>
+            </tr>
+            <tr>
+                <td>Number of Dependents</td>
+                <td><input type="number"></td>
+            </tr>
+            <tr>
+                <td>Physical Home Address</td>
+                <td><input type="text"></td>
+            </tr>
+            <tr>
+                <td>Length of Stay-at-Home Address</td>
+                <td>
+                    <input type="text" placeholder="Years and Months (e.g., 2 years, 6 months)">
+                </td>
+            </tr>
+            <tr>
+                <td>Accommodation Type</td>
+                <td>
+                    <select>
+                        <option value="">Select</option>
+                        <option value="owned">Owned</option>
+                        <option value="rented">Rented</option>
+                        <option value="employer">Employer Provided</option>
+                        <option value="parents">Staying with Parents</option>
+                    </select>
+                </td>
+            </tr>
+            <tr>
+                <td>Postal Address (different from above)</td>
+                <td><input type="text"></td>
+            </tr>
+            <tr>
+                <td>Telephone Numbers</td>
+                <td>Tel: <input type="tel"> Cell: <input type="tel"></td>
+            </tr>
+            <tr>
+                <td>Email</td>
+                <td><input type="email"></td>
+            </tr>
+            <tr>
+                <td>Next of Kin</td>
+                <td><input type="text"></td>
+            </tr>
+            <tr>
+                <td>Next of Kin Address</td>
+                <td><input type="text"></td>
+            </tr>
+            <tr>
+                <td>Next of Kin Telephone Numbers</td>
+                <td>Tel: <input type="tel"> Cell: <input type="tel"></td>
+            </tr>
+        </table>
+
+        <h3>Employment /Business Details (Applicant)</h3>
+        <table>
+            <tr>
+                <td>Period with Employer</td>
+                <td><input type="text"></td>
+            </tr>
+            <tr>
+                <td>Designation</td>
+                <td>Post: <input type="text"> Department: <input type="text"></td>
+            </tr>
+            <tr>
+                <td>Monthly Salary</td>
+                <td>Gross($): <input type="number"> Net($): <input type="number"></td>
+            </tr>
+        </table>
+
+        <h3>APPLICANT'S BANKING DETAILS</h3>
+        <table>
+            <tr>
+                <td>Any Account with ZWMB Bank?</td>
+                <td>
+                    <label><input type="radio" name="zwmb_account" value="yes" onclick="toggleYearsInput('show')"> Yes</label>
+                    <label><input type="radio" name="zwmb_account" value="no" onclick="toggleYearsInput('hide')"> No</label>
+                    <br>
+                    <span id="years_input_container" style="display: none;">
+                        If Yes number of years with ZWMB: <input type="number" id="years_input">
+                    </span>
+                </td>
+            </tr>
+            
+            <script>
+            function toggleYearsInput(action) {
+                var container = document.getElementById('years_input_container');
+                if (action === 'show') {
+                    container.style.display = 'inline';
+                } else {
+                    container.style.display = 'none';
+                }
+            }
+            </script>
+            <tr>
+                <td>Branch</td>
+                <td><input type="text"></td>
+            </tr>
+            <tr>
+                <td>Account Number</td>
+                <td><input type="text"></td>
+            </tr>
+            <tr>
+                <td>Have you previously taken any loan with ZWMB</td>
+                <td>
+                    <label><input type="radio" name="zwmb_loan" value="yes" onclick="toggleLoanAmount('show')"> Yes</label>
+                    <label><input type="radio" name="zwmb_loan" value="no" onclick="toggleLoanAmount('hide')"> No</label>
+                    <br>
+                    <span id="loan_amount_container" style="display: none;">
+                        If Yes Loan Amount ($): <input type="number" id="loan_amount_input">
+                    </span>
+                    
+                </td>
+            </tr>
+            
+            <script>
+            function toggleLoanAmount(action) {
+                var container = document.getElementById('loan_amount_container');
+                if (action === 'show') {
+                    container.style.display = 'inline';
+                } else {
+                    container.style.display = 'none';
+                }
+            }
+            </script>
+          
+            <tr>
+                <td>Current balance</td>
+                <td><input type="number"></td>
+            </tr>
+            <tr>
+                <td>taken on</td>
+                <td><input type="date"></td>
+            </tr>
+            <tr>
+                <td>Maturity Date</td>
+                <td><input type="date"></td>
+            </tr>
+            <tr>
+                <td>0r currently being repaid at ($) per month</td>
+                <td><input type="number"></td>
+            </tr>
+        </table>
+        <h3>My other banking details</h3>
+        <table>
+            <tr>
+                <td>Bank & Branch</td>
+                <td><input type="text"></td>
+            </tr>
+            <tr>
+                <td>Type of Account (s)</td>
+                <td><input type></td>
+                
+            </tr>
+        </table>
+        
+
+<h2>APPLICANT'S LOAN REQUEST</h2>
+
+      <table>
+        <tr>
+          <th>Loan Requested ($)</th>
+          <td>
+            <input type="number" id="loanAmountFigures" name="loanAmountFigures" placeholder="In figures">
+            <input type="text" id="loanAmountWords" name="loanAmountWords" placeholder="In words">
+          </td>
+        </tr>
+        <tr>
+          <th>Loan Period</th>
+          <td>
+            Year(s): <input type="number" id="loanYears" name="loanYears">
+            Month(s): <input type="number" id="loanMonths" name="loanMonths">
+          </td>
+        </tr>
+        <tr>
+          <th>Brief Purpose of Loan:</th>
+          <td><textarea id="briefPurpose" name="briefPurpose"></textarea></td>
+        </tr>
+        <tr>
+          <th>Specific Loan Purpose</th>
+          <td>
+            <select name="loanPurpose">
+              <option value="">Select Loan Purpose</option>
+              <option value="Personal Loan">Personal Loan</option>
+              <option value="Home Improvement Loan">Home Improvement Loan</option>
+              <option value="Car Loan">Car Loan</option>
+              <option value="Educational Loan">Educational Loan</option>
+              <option value="Other">Other</option>
+            </select><br>
+            <label>If Other, state Type of Loan Required: <input type="text" name="otherLoanType"></label>
+          </td>
+        </tr>
+      </table>
+    
+      <h2>APPLICANT'S COLLATERAL SECURITY</h2>
+    
+      <table>
+        <tr>
+          <th>SECURITY TYPE</th>
+          <th>DESCRIPTION</th>
+          <th>Value ($)</th>
+        </tr>
+        <tr>
+          <td><input type="text" name="securityType1"></td>
+          <td><input type="text" name="securityDescription1"></td>
+          <td><input type="number" name="securityValue1"></td>
+        </tr>
+          <tr>
+          <td><input type="text" name="securityType2"></td>
+          <td><input type="text" name="securityDescription2"></td>
+          <td><input type="number" name="securityValue2"></td>
+        </tr>
+          <tr>
+          <td><input type="text" name="securityType3"></td>
+          <td><input type="text" name="securityDescription3"></td>
+          <td><input type="number" name="securityValue3"></td>
+        </tr>
+      </table>
+    
+      <h2>DECLARATION BY APPLICANT</h2>
+      <p>I hereby declare that the information provided is true and accurate.</p>
+    
+      <button type="submit">Submit</button>
+    </form>
+    <script src="script.js"></script>
+
+    async function submitLoanApplication(e) {
+        e.preventDefault();
+        
+        const formData = new FormData(document.getElementById('loan-form'));
+        
+        try {
+            const response = await fetch('/api/submit-application', {
+                method: 'POST',
+                headers: {
+                    'Accept': 'application/json',
+                },
+                body: formData
+            });
+    
+            const data = await response.json();
+            
+            if (data.status === 'success') {
+                // Show success message with PDF download link
+                const resultDiv = document.createElement('div');
+                resultDiv.innerHTML = `
+                    <p>Application submitted successfully!</p>
+                    <a href="${data.pdf_url}" download>Download Application PDF</a>
+                    <p>Loan ID: ${data.loan_id}</p>
+                `;
+                document.body.appendChild(resultDiv);
+            }
+        } catch (error) {
+            console.error('Submission error:', error);
+        }
+    }
+    </body>

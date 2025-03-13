@@ -3,51 +3,44 @@
 namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
-use App\Models\User;
-use App\Http\Requests\LoginRequest;
 use Illuminate\Support\Facades\Auth;
-use Illuminate\Support\Facades\Hash;
+use App\Models\User;
 
 class AuthController extends Controller
 {
-    /**
-     * Handle user login
-     */
-    public function login(LoginRequest $request)
+    public function login(Request $request)
     {
-        $credentials = $request->only('username', 'password');
-        
+        $credentials = $request->validate([
+            'username' => 'required|string',
+            'password' => 'required|string',
+        ]);
+
         if (Auth::attempt($credentials)) {
             $user = Auth::user();
             $token = $user->createToken('auth_token')->plainTextToken;
-            
-            User::where('user_id', $user->user_id)->update([
-                'last_login' => now()
-            ]);
-            
+
             return response()->json([
+                'success' => true,
+                'token' => $token,
                 'user' => [
                     'username' => $user->username,
-                    'role' => $user->role
-                ],
-                'access_token' => $token,
-                'token_type' => 'Bearer'
+                    'role' => $user->role,
+                ]
             ]);
         }
-        
+
         return response()->json([
-            'message' => 'Invalid login credentials'
+            'success' => false,
+            'message' => 'Invalid username or password'
         ], 401);
     }
-    
-    /**
-     * Handle user logout
-     */
+
     public function logout(Request $request)
     {
         $request->user()->currentAccessToken()->delete();
         
         return response()->json([
+            'success' => true,
             'message' => 'Logged out successfully'
         ]);
     }

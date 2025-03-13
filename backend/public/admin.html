@@ -1,0 +1,145 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Loan Management System - Admin Portal</title>
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+
+  <header>
+    <h1>Loan Management System</h1>
+    <h2>Admin Portal</h2>
+  </header>
+
+  <div class="container">
+    <div class="user-info">
+      <p>Welcome, <span id="username-display">Admin</span>!</p>
+    </div>
+
+    <div id="admin-section">
+      <h2>Loan Applications</h2>
+      <div id="admin-loans"></div>
+      <button onclick="logout()" class="logout-btn">Logout</button>
+    </div>
+  </div>
+
+  <script>
+    // Check if user is logged in
+    const currentUser = JSON.parse(localStorage.getItem('currentUser'));
+    if (!currentUser || currentUser.role !== 'admin') {
+      alert('Please login as an admin');
+      window.location.href = 'index.html';
+    } else {
+      document.getElementById('username-display').textContent = currentUser.username;
+    }
+
+    // Get loans from localStorage or initialize
+    let loans = JSON.parse(localStorage.getItem('loans')) || [];
+    
+    // Elements
+    const adminLoans = document.getElementById('admin-loans');
+
+    // Render Admin Loans
+    function renderAdminLoans() {
+      adminLoans.innerHTML = '';
+
+      if (loans.length === 0) {
+        adminLoans.innerHTML = '<p>No loan applications found.</p>';
+        return;
+      }
+
+      loans.forEach((loan) => {
+        const div = document.createElement('div');
+        div.classList.add('loan-item');
+        div.innerHTML = `
+          <p><strong>Loan ID:</strong> ${loan.id}</p>
+          <p><strong>Name:</strong> ${loan.name}</p>
+          <p><strong>Amount:</strong> $${loan.amount}</p>
+          <p><strong>Submitted by:</strong> ${loan.username}</p>
+          <p><strong>Status:</strong> <span class="status ${loan.status.toLowerCase()}">${loan.status}</span></p>
+          <p><strong>Review:</strong> ${loan.review || 'No review yet'}</p>
+          <div class="admin-actions">
+            <button onclick="updateLoanStatus(${loan.id}, 'Approved')">Approve</button>
+            <button onclick="updateLoanStatus(${loan.id}, 'Rejected')">Reject</button>
+            <input type="text" placeholder="Add review" value="${loan.review || ''}" onblur="addReview(${loan.id}, this.value)">
+          </div>
+        `;
+        adminLoans.appendChild(div);
+      });
+    }
+
+    // Admin Actions
+    function updateLoanStatus(id, status) {
+      const loan = loans.find((loan) => loan.id === id);
+      if (loan) {
+        loan.status = status;
+        localStorage.setItem('loans', JSON.stringify(loans));
+        renderAdminLoans();
+        alert(`Loan #${id} has been ${status.toLowerCase()}`);
+      }
+    }
+
+    function addReview(id, review) {
+      const loan = loans.find((loan) => loan.id === id);
+      if (loan) {
+        loan.review = review;
+        localStorage.setItem('loans', JSON.stringify(loans));
+        renderAdminLoans();
+      }
+    }
+
+    // Logout Functionality
+    function logout() {
+      localStorage.removeItem('currentUser');
+      window.location.href = 'index.html';
+    }
+
+    // Load loans on page load
+    renderAdminLoans();
+
+    async function loadApplications() {
+    try {
+        const response = await fetch('/api/admin/applications', {
+            headers: {
+                'Authorization': `Bearer ${localStorage.getItem('auth_token')}`,
+                'Accept': 'application/json'
+            }
+        });
+        
+        const applications = await response.json();
+        renderApplications(applications.data);
+    } catch (error) {
+        console.error('Error loading applications:', error);
+    }
+}
+
+function renderApplications(applications) {
+    const container = document.getElementById('applications-list');
+    container.innerHTML = applications.map(app => `
+        <div class="application">
+            <div class="app-header">
+                <span>#${app.loan_id}</span>
+                <span class="status ${app.status.toLowerCase()}">${app.status}</span>
+            </div>
+            <div class="app-body">
+                <p>Employee: ${app.employee.full_name}</p>
+                <p>Amount: $${app.amount}</p>
+                <p>Purpose: ${app.purpose}</p>
+                <div class="admin-actions">
+                    <select onchange="updateStatus(${app.loan_id}, this.value)">
+                        <option ${app.status === 'Pending' ? 'selected' : ''}>Pending</option>
+                        <option ${app.status === 'Approved' ? 'selected' : ''}>Approved</option>
+                        <option ${app.status === 'Rejected' ? 'selected' : ''}>Rejected</option>
+                    </select>
+                    <button onclick="showNotesModal(${app.loan_id})">Add Notes</button>
+                </div>
+            </div>
+        </div>
+    `).join('');
+}
+  </script>
+  
+</body>
+</html>

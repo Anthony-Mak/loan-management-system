@@ -1,5 +1,6 @@
 {
     "require": {
-        "doctrine/dbal": "^4.2"
+        "doctrine/dbal": "^4.2",
+        "fruitcake/laravel-cors": "^3.0"
     }
 }
