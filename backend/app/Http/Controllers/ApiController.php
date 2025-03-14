@@ -192,6 +192,14 @@ class ApiController extends Controller
         ], 500);
     }
 }
+
+public function logError(Request $request)
+{
+    // Log the error
+    \Log::error('Client error: ' . $request->input('message'));
+    
+    return response()->json(['status' => 'logged'], 200);
+}
     /**
      * Check application status
      */

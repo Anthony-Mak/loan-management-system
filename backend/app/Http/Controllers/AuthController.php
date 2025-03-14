@@ -11,18 +11,32 @@ use Illuminate\Validation\ValidationException;
 class AuthController extends Controller
 {
     public function login(Request $request)
-    {
+{
+    try {
+        // Log the request data
+        \Log::debug('Login attempt:', [
+            'username' => $request->username,
+            // Don't log passwords
+        ]);
+        
         $credentials = $request->validate([
             'username' => 'required|string',
             'password' => 'required|string',
         ]);
-
+        
         if (Auth::attempt(['username' => $request->username, 'password' => $request->password])) {
             $user = Auth::user();
-
+            
+            // Log successful authentication
+            \Log::debug('Authentication successful for user:', [
+                'user_id' => $user->user_id,
+                'username' => $user->username,
+                'role' => $user->role,
+            ]);
+            
             // Create token for API access
             $token = $user->createToken('auth_token')->plainTextToken;
-
+            
             return response()->json([
                 'success' => true,
                 'token' => $token,
@@ -32,13 +46,30 @@ class AuthController extends Controller
                 ]
             ]);
         }
-
-         // Authentication failed
+        
+        // Authentication failed
+        \Log::warning('Authentication failed for username:', [
+            'username' => $request->username,
+        ]);
+        
         return response()->json([
             'success' => false,
             'message' => 'Invalid username or password'
         ], 401);
+    } catch (\Exception $e) {
+        // Log the exception
+        \Log::error('Login exception:', [
+            'message' => $e->getMessage(),
+            'trace' => $e->getTraceAsString(),
+        ]);
+        
+        return response()->json([
+            'success' => false,
+            'message' => 'An error occurred during login. Please try again.',
+            'debug' => config('app.debug') ? $e->getMessage() : null,
+        ], 500);
     }
+}
     public function changePassword(Request $request)
 {
     $request->validate([
