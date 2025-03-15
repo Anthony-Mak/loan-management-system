@@ -49,6 +49,14 @@ Route::middleware(['auth:sanctum', 'role:hr,admin'])->prefix('hr')->group(functi
 
 // Employee routes
 Route::middleware(['auth:sanctum', 'role:employee,hr,admin'])->group(function () {
+    // Employee dashboard data
+    Route::get('/employee/dashboard', [EmployeeController::class, 'getDashboardData']);
+    // Employee loan applications
+    Route::get('/employee/loans', [EmployeeController::class, 'getLoanApplications']);
+    // Get loan details
+    Route::get('/employee/loans/{id}', [EmployeeController::class, 'getLoanDetails']);
+    // Submit new loan application
+    Route::post('/employee/loans', [EmployeeController::class, 'submitLoanApplication']);
     Route::get('/loans/history', [LoanApplicationController::class, 'history']);
     Route::post('/loans', [LoanApplicationController::class, 'store']);
     Route::get('/profile', [EmployeeController::class, 'show']);

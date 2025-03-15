@@ -36,6 +36,11 @@ class AuthController extends Controller
             
             // Create token for API access
             $token = $user->createToken('auth_token')->plainTextToken;
+            \Log::debug('Preparing to redirect user:', [
+                'username' => $user->username,
+                'role' => $user->role,
+                'redirect_path' => $user->role === 'employee' ? '/employee/dashboard' : '/admin/dashboard'
+            ]);
             
             return response()->json([
                 'success' => true,
@@ -43,6 +48,7 @@ class AuthController extends Controller
                 'user' => [
                     'username' => $user->username,
                     'role' => $user->role,
+                    'password_change_required' => $user->password_change_required ?? false
                 ]
             ]);
         }
