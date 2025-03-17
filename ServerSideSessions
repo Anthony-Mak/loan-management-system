@@ -1,20 +1,35 @@
 <?php
-// Start or resume a session
+// Start session
 session_start();
 
-// Store data in the session
-$_SESSION['username'] = 'john_doe';
-$_SESSION['loggedIn'] = true;
+// Connect to database
+$conn = new mysqli("localhost", "db_user", "db_password", "your_database");
 
-// Access session data later
-if ($_SESSION['loggedIn']) {
-  echo "Welcome back, " . $_SESSION['username'];
+// Process login form
+if ($_SERVER["REQUEST_METHOD"] == "POST") {
+    $username = $conn->real_escape_string($_POST['username']);
+    $password = $_POST['password'];
+    
+    // Query database
+    $sql = "SELECT id, username, password_hash FROM users WHERE username = '$username'";
+    $result = $conn->query($sql);
+    
+    if ($result->num_rows == 1) {
+        $user = $result->fetch_assoc();
+        
+        // Verify password (using password_hash)
+        if (password_verify($password, $user['password_hash'])) {
+            // Password is correct, create session
+            $_SESSION['user_id'] = $user['id'];
+            $_SESSION['username'] = $user['username'];
+            $_SESSION['logged_in'] = true;
+            
+            header("Location: dashboard.php");
+        } else {
+            $error = "Invalid password";
+        }
+    } else {
+        $error = "User not found";
+    }
 }
-?> 
- The session data is stored on the server, and the client only receives a session ID. This session ID is stored in a cookie, which is sent with every request to the server. The server uses this session ID to retrieve the session data and associate it with the current request. 
- Server-side sessions are more secure than client-side sessions because the session data is stored on the server and not accessible to the client. However, they require more server resources and can be slower than client-side sessions. 
- Client-Side Sessions 
- Client-side sessions store session data on the client side, typically in a cookie or local storage. This approach is faster and requires fewer server resources than server-side sessions. However, it is less secure because the session data is accessible to the client. 
- Client-side sessions are commonly used in single-page applications (SPAs) and other client-side applications where server-side storage is not practical. 
- Example of Client-Side Sessions 
- Here is an example of using client-side sessions in JavaScript:
+?>
