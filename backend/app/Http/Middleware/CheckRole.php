@@ -19,19 +19,27 @@ class CheckRole
     public function handle(Request $request, Closure $next, ...$roles)
     {
         if (!Auth::check()) {
-            return redirect('login');
+            return $this->unauthorizedResponse($request);
         }
+
         $user = Auth::user();
         
-        foreach ($roles as $role) {
-            if ($user->role === $role) {
-                return $next($request);
-            }
+        // Admin gets full access
+        if ($user->role === 'admin') {
+            return $next($request);
         }
-         // If the request expects JSON (API request)
-         if ($request->expectsJson()) {
+
+        // Check if user has any of the required roles
+        if (!in_array($user->role, $roles)) {
+            return $this->unauthorizedResponse($request);
+        }
+        return $next($request); 
+    }
+    private function unauthorizedResponse($request)
+    {
+        if ($request->expectsJson()) {
             return response()->json(['error' => 'Unauthorized'], 403);
         }
-        return redirect()->back()->with('error', 'You do not have permission to access this resource.');    
+        return redirect()->back()->with('error', 'Unauthorized access');
     }
 }

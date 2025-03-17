@@ -107,6 +107,7 @@
           console.log(`[${timestamp}] Login response:`, data);
           if (data.success) {
             console.log(`[${timestamp}] Login successful for user: ${username}, Role: ${data.user.role}`);
+            console.log(`[${timestamp}] About to redirect user to: ${data.user.role === 'employee' ? '/employee/dashboard' : '/admin/dashboard'}`);
             // Store the token
             localStorage.setItem('auth_token', data.token);
             localStorage.setItem('currentUser', JSON.stringify({

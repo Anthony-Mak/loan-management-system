@@ -22,7 +22,7 @@ return new class extends Migration
             // Add your new columns
             $table->string('employee_id', 30)->nullable();
             $table->string('username', 50)->unique();
-            $table->enum('role', ['admin', 'manager', 'employee']);
+            $table->enum('role', ['admin', 'hr', 'employee'])->default('employee')->comment('System roles: admin, hr, employee');
             $table->timestamp('last_login')->nullable();
             
             // Add foreign key
@@ -30,7 +30,7 @@ return new class extends Migration
         });
     }
 
-    /**
+    /** 
      * Reverse the migrations.
      */
     public function down(): void

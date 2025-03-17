@@ -1,8 +1,10 @@
+{{-- resources/views/employee/dashboard.blade.php --}}
 <!DOCTYPE html>
 <html lang="en">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="csrf-token" content="{{ csrf_token() }}">
   <title>Loan Management System - Employee Dashboard</title>
   <style>
     :root {
@@ -27,7 +29,8 @@
         border: none;
         border-radius: 4px;
         cursor: pointer;
-        transition: background-color 0.3s ease;}
+        transition: background-color 0.3s ease;
+    }
 
     * {
       margin: 0;
@@ -269,9 +272,12 @@
   <nav class="navbar">
     <div class="navbar-brand">Loan Management System</div>
     <div class="user-info">
-      <div class="user-profile" id="user-initial">E</div>
-      <span id="username-display">Employee</span>
-      <button onclick="logout()" class="logout-btn">Logout</button>
+      <div class="user-profile" id="user-initial">{{ auth()->user()->name[0] }}</div>
+      <span id="username-display">{{ auth()->user()->name }}</span>
+      <form method="POST" action="{{ route('logout') }}" class="inline">
+        @csrf
+        <button type="submit" class="logout-btn">Logout</button>
+      </form>
     </div>
   </nav>
 
@@ -295,18 +301,14 @@
       </div>
     </div>
 
-    <div>
-      <button onclick="location.href='loanform.html'">Apply for New Loan</button>
+    <div class="actions">
+      <a href="{{ route('employee.loan.create') }}" class="btn btn-primary">Apply for New Loan</a>
     </div>
-    
-    <!--<div class="actions">
-      <button onclick="redirectToLoanForm()" class="btn btn-primary">Apply for New Loan</button>
-    </div>  -->
     
     <h2 class="section-title">Your Loan Applications</h2>
     
     <div id="employee-loans" class="loan-list">
-      <!-- Loan items will be added here -->
+      <!-- Loan items will be added here dynamically -->
     </div>
     
     <div id="loan-detail" class="loan-detail">
@@ -315,97 +317,64 @@
   </div>
 
   <script>
-    // Check if user is logged in
-    const currentUser = JSON.parse(localStorage.getItem('currentUser'));
-    if (!currentUser || currentUser.role !== 'employee') {
-      alert('Please login as an employee');
-      window.location.href = 'index.html';
-    } else {
-      document.getElementById('username-display').textContent = currentUser.username;
-      document.getElementById('user-initial').textContent = currentUser.username.charAt(0).toUpperCase();
+    // API URL for the backend
+    const apiUrl = '/api';
+
+    // Fetch dashboard data
+    async function fetchDashboardData() {
+      try {
+        const response = await fetch(`${apiUrl}/employee/dashboard`, {
+          headers: {
+            'Accept': 'application/json',
+            'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content')
+          },
+          credentials: 'include'
+        });
+        
+        if (!response.ok) {
+          throw new Error('Failed to fetch dashboard data');
+        }
+        
+        const data = await response.json();
+        
+        // Update dashboard stats
+        document.getElementById('total-applications').textContent = data.total_applications;
+        document.getElementById('pending-applications').textContent = data.pending_applications;
+        document.getElementById('approved-applications').textContent = data.approved_applications;
+        document.getElementById('rejected-applications').textContent = data.rejected_applications;
+      } catch (error) {
+        console.error('Error fetching dashboard data:', error);
+      }
     }
 
-    // Get loans from localStorage or initialize
-    let loans = JSON.parse(localStorage.getItem('loans')) || [];
-
-    // Elements
-    const employeeLoans = document.getElementById('employee-loans');
-    const loanDetail = document.getElementById('loan-detail');
-    const totalApplicationsEl = document.getElementById('total-applications');
-    const pendingApplicationsEl = document.getElementById('pending-applications');
-    const approvedApplicationsEl = document.getElementById('approved-applications');
-    const rejectedApplicationsEl = document.getElementById('rejected-applications');
-
-    // Redirect to Loan Form
-    function redirectToLoanForm() {
-      window.location.href = 'loanform.html';
-    }
-
-    // Update Dashboard Stats
-    function updateDashboardStats(userLoans) {
-      totalApplicationsEl.textContent = userLoans.length;
-      
-      const pending = userLoans.filter(loan => loan.status === 'Pending').length;
-      const approved = userLoans.filter(loan => loan.status === 'Approved').length;
-      const rejected = userLoans.filter(loan => loan.status === 'Rejected').length;
-      
-      pendingApplicationsEl.textContent = pending;
-      approvedApplicationsEl.textContent = approved;
-      rejectedApplicationsEl.textContent = rejected;
-    }
-
-    // Show Loan Detail
-    function showLoanDetail(loan) {
-      loanDetail.innerHTML = `
-        <h3>Loan Details</h3>
-        <div class="loan-detail-grid">
-          <div class="loan-detail-item">
-            <div class="loan-detail-label">Loan ID</div>
-            <div class="loan-detail-value">${loan.id}</div>
-          </div>
-          <div class="loan-detail-item">
-            <div class="loan-detail-label">Applicant</div>
-            <div class="loan-detail-value">${loan.name}</div>
-          </div>
-          <div class="loan-detail-item">
-            <div class="loan-detail-label">Amount Requested</div>
-            <div class="loan-detail-value">$${loan.amount}</div>
-          </div>
-          <div class="loan-detail-item">
-            <div class="loan-detail-label">Status</div>
-            <div class="loan-detail-value">
-              <span class="status ${loan.status.toLowerCase()}">${loan.status}</span>
-            </div>
-          </div>
-          <div class="loan-detail-item">
-            <div class="loan-detail-label">Application Date</div>
-            <div class="loan-detail-value">${new Date(loan.date).toLocaleDateString()}</div>
-          </div>
-          <div class="loan-detail-item">
-            <div class="loan-detail-label">Purpose</div>
-            <div class="loan-detail-value">${loan.purpose || 'Not specified'}</div>
-          </div>
-        </div>
-        ${loan.review ? `
-          <div class="review-block">
-            <div class="loan-detail-label">Review Comments</div>
-            <div class="loan-detail-value">${loan.review}</div>
-          </div>
-        ` : ''}
-      `;
-      loanDetail.classList.add('active');
+    // Fetch loan applications
+    async function fetchLoanApplications() {
+      try {
+        const response = await fetch(`${apiUrl}/employee/loans`, {
+          headers: {
+            'Accept': 'application/json',
+            'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content')
+          },
+          credentials: 'include'
+        });
+        
+        if (!response.ok) {
+          throw new Error('Failed to fetch loan applications');
+        }
+        
+        const loans = await response.json();
+        renderEmployeeLoans(loans);
+      } catch (error) {
+        console.error('Error fetching loan applications:', error);
+      }
     }
 
     // Render Employee Loans
-    function renderEmployeeLoans() {
+    function renderEmployeeLoans(loans) {
+      const employeeLoans = document.getElementById('employee-loans');
       employeeLoans.innerHTML = '';
 
-      const userLoans = loans.filter((loan) => loan.username === currentUser.username);
-      
-      // Update dashboard stats
-      updateDashboardStats(userLoans);
-
-      if (userLoans.length === 0) {
+      if (loans.length === 0) {
         employeeLoans.innerHTML = `
           <div class="empty-state">
             <p>No loan applications found.</p>
@@ -415,67 +384,92 @@
         return;
       }
 
-      // Sort loans by date (newest first)
-      userLoans.sort((a, b) => new Date(b.date) - new Date(a.date));
-
-      userLoans.forEach((loan) => {
+      loans.forEach((loan) => {
         const div = document.createElement('div');
         div.classList.add('loan-item');
         div.innerHTML = `
           <div>
             <div class="loan-id">#${loan.id}</div>
-            <div class="loan-name">${loan.name}</div>
+            <div class="loan-name">${loan.employee ? loan.employee.full_name : 'Employee'}</div>
           </div>
           <div class="loan-amount">$${loan.amount}</div>
           <div>
             <span class="status ${loan.status.toLowerCase()}">${loan.status}</span>
           </div>
           <div>
-            <button onclick="showLoanDetail(${JSON.stringify(loan).replace(/"/g, '&quot;')})" class="btn btn-primary">View Details</button>
+            <button onclick="showLoanDetail('${loan.id}')" class="btn btn-primary">View Details</button>
           </div>
         `;
         employeeLoans.appendChild(div);
       });
     }
 
-    // Logout Functionality
-    function logout() {
-      localStorage.removeItem('currentUser');
-      window.location.href = 'index.html';
+    // Show Loan Detail
+    async function showLoanDetail(loanId) {
+      try {
+        const response = await fetch(`${apiUrl}/employee/loans/${loanId}`, {
+          headers: {
+            'Accept': 'application/json',
+            'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content')
+          },
+          credentials: 'include'
+        });
+        
+        if (!response.ok) {
+          throw new Error('Failed to fetch loan details');
+        }
+        
+        const loan = await response.json();
+        const loanDetail = document.getElementById('loan-detail');
+        
+        loanDetail.innerHTML = `
+          <h3>Loan Details</h3>
+          <div class="loan-detail-grid">
+            <div class="loan-detail-item">
+              <div class="loan-detail-label">Loan ID</div>
+              <div class="loan-detail-value">${loan.id}</div>
+            </div>
+            <div class="loan-detail-item">
+              <div class="loan-detail-label">Applicant</div>
+              <div class="loan-detail-value">${loan.employee ? loan.employee.full_name : 'Employee'}</div>
+            </div>
+            <div class="loan-detail-item">
+              <div class="loan-detail-label">Amount Requested</div>
+              <div class="loan-detail-value">$${loan.amount}</div>
+            </div>
+            <div class="loan-detail-item">
+              <div class="loan-detail-label">Status</div>
+              <div class="loan-detail-value">
+                <span class="status ${loan.status.toLowerCase()}">${loan.status}</span>
+              </div>
+            </div>
+            <div class="loan-detail-item">
+              <div class="loan-detail-label">Application Date</div>
+              <div class="loan-detail-value">${new Date(loan.application_date).toLocaleDateString()}</div>
+            </div>
+            <div class="loan-detail-item">
+              <div class="loan-detail-label">Purpose</div>
+              <div class="loan-detail-value">${loan.purpose || 'Not specified'}</div>
+            </div>
+          </div>
+          ${loan.review_notes ? `
+            <div class="review-block">
+              <div class="loan-detail-label">Review Comments</div>
+              <div class="loan-detail-value">${loan.review_notes}</div>
+            </div>
+          ` : ''}
+        `;
+        loanDetail.classList.add('active');
+      } catch (error) {
+        console.error('Error fetching loan details:', error);
+      }
     }
 
-    // Add sample loan data for demonstration if none exists
-    if (loans.length === 0) {
-      const sampleLoans = [
-        {
-          id: 'L001',
-          username: currentUser.username,
-          name: currentUser.username,
-          amount: 5000,
-          status: 'Pending',
-          date: new Date().toISOString(),
-          purpose: 'Home renovation'
-        },
-        {
-          id: 'L002',
-          username: currentUser.username,
-          name: currentUser.username,
-          amount: 2000,
-          status: 'Approved',
-          review: 'Approved based on good credit history.',
-          date: new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString(),
-          purpose: 'Education'
-        },
-        {
-          id: 'L003',
-          username: currentUser.username,
-          name: currentUser.username,
-          amount: 3000,
-          status: 'Rejected',
-          review: 'Insufficient income for requested amount.',
-          date: new Date(Date.now() - 14 * 24 * 60 * 60 * 1000).toISOString(),
-          purpose: 'Vehicle purchase'
-        }
-      ]
-    }
+    // Initialize
+    document.addEventListener('DOMContentLoaded', async function() {
+      await fetchDashboardData();
+      await fetchLoanApplications();
+    });
   </script>
+</body>
+</html>
