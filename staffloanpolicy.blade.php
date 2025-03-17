@@ -159,7 +159,7 @@
         <h1>Staff Loan Policy</h1>
     <p>This is the staff loan policy.</p>
     <button onclick="location.href='loanform.html'">Back</button>
-    <button onclick="location.href='pledgeform.html'">Next</button>
+    `<button onclick="location.href='pledgeform.html'">Next</button>
     </div>
 
     <script>
