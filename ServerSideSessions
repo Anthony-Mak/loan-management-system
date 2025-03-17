@@ -3,7 +3,7 @@
 session_start();
 
 // Connect to database
-$conn = new mysqli("localhost", "db_user", "db_password", "your_database");
+$conn = new mysqli("localhost:8000", "root", "friend", "employee_loans");
 
 // Process login form
 if ($_SERVER["REQUEST_METHOD"] == "POST") {
