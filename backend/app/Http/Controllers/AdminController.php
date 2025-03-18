@@ -7,6 +7,7 @@ use App\Models\LoanApplication;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 
+
 class AdminController extends Controller
 {
     /**
@@ -33,24 +34,30 @@ class AdminController extends Controller
     public function updateApplication(Request $request, $id)
     {
         $request->validate([
-            'status' => 'required|in:Pending,Approved,Rejected',
-            'review_notes' => 'nullable|string'
+            'status' => 'required|in:Approved,Rejected,Pending',
+            'review_notes' => 'nullable|string|max:500'
         ]);
         
-        $loanApplication = LoanApplication::findOrFail($id);
+        $loan = LoanApplication::with(['employee', 'processedBy'])
+        ->findOrFail($id);
         
-        $loanApplication->update([
+        $loan->update([
             'status' => $request->status,
             'review_notes' => $request->review_notes,
-            'processed_date' => now(),
-            'processed_by' => Auth::user()->employee_id
+            'processed_by' => Auth::user()->employee_id,
+            'processed_date' => now()
         ]);
+
         
+       
         return response()->json([
-            'message' => 'Loan application updated successfully',
-            'loan_application' => $loanApplication
+            'success' => true,
+            'loan' => $loan,
+            'message' => 'Loan application updated successfully'
         ]);
+    
     }
+    
     /**
      * Get all employees
      */

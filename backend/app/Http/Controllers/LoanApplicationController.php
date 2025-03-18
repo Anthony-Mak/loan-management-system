@@ -113,6 +113,18 @@ class LoanApplicationController extends Controller
             ], 500);
         }
     }
+    public function create()
+    {
+        $loanTypes = LoanType::all();
+        $employee = Employee::where('employee_id', Auth::user()->employee_id)
+        ->with('bankingDetails')
+        ->first();
+        return view('employee.loan.create', [
+            'loanTypes' => $loanTypes,
+            'employee' => $employee,
+            'bankingDetails' => $employee->bankingDetails ?? null
+        ]);
+    }
     
     /**
      * Generate PDF for HR download

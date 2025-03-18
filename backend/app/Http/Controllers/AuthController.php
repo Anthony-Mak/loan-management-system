@@ -7,6 +7,8 @@ use Illuminate\Support\Facades\Auth;
 use App\Models\User;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Validation\ValidationException;
+use Laravel\Sanctum\PersonalAccessToken;
+use \Log;
 
 class AuthController extends Controller
 {
@@ -14,7 +16,7 @@ class AuthController extends Controller
 {
     try {
         // Log the request data
-        \Log::debug('Login attempt:', [
+        Log::debug('Login attempt:', [
             'username' => $request->username,
             // Don't log passwords
         ]);
@@ -24,19 +26,31 @@ class AuthController extends Controller
             'password' => 'required|string',
         ]);
         
-        if (Auth::attempt(['username' => $request->username, 'password' => $request->password])) {
+        if (Auth::attempt($credentials)) {
             $user = Auth::user();
             
             // Log successful authentication
-            \Log::debug('Authentication successful for user:', [
+            Log::debug('Authentication successful for user:', [
                 'user_id' => $user->user_id,
                 'username' => $user->username,
                 'role' => $user->role,
             ]);
-            
-            // Create token for API access
-            $token = $user->createToken('auth_token')->plainTextToken;
-            \Log::debug('Preparing to redirect user:', [
+
+            $request->session()->regenerate();
+             // Check if password change is required
+             if ($user->password_change_required) {
+                return response()->json([
+                    'success' => true,
+                    'password_change_required' => true,
+                    'token' => $user->createToken('auth_token')->plainTextToken,
+                    'user' => [
+                        'username' => $user->username,
+                        'role' => $user->role
+                        ]
+                ]);
+            }
+        
+            Log::debug('Preparing to redirect user:', [
                 'username' => $user->username,
                 'role' => $user->role,
                 'redirect_path' => $user->role === 'employee' ? '/employee/dashboard' : '/admin/dashboard'
@@ -44,17 +58,17 @@ class AuthController extends Controller
             
             return response()->json([
                 'success' => true,
-                'token' => $token,
                 'user' => [
                     'username' => $user->username,
                     'role' => $user->role,
-                    'password_change_required' => $user->password_change_required ?? false
-                ]
+                    'password_change_required' => false
+                ],
+                'token' => $user->createToken('auth_token')->plainTextToken
             ]);
         }
         
         // Authentication failed
-        \Log::warning('Authentication failed for username:', [
+        Log::warning('Authentication failed for username:', [
             'username' => $request->username,
         ]);
         
@@ -64,7 +78,7 @@ class AuthController extends Controller
         ], 401);
     } catch (\Exception $e) {
         // Log the exception
-        \Log::error('Login exception:', [
+        Log::error('Login exception:', [
             'message' => $e->getMessage(),
             'trace' => $e->getTraceAsString(),
         ]);
@@ -76,32 +90,109 @@ class AuthController extends Controller
         ], 500);
     }
 }
-    public function changePassword(Request $request)
-{
-    $request->validate([
-        'current_password' => 'required|string',
-        'new_password' => 'required|string|min:8|confirmed',
-    ]);
-    
-    $user = Auth::user();
-    
-    // Check if current password is correct
-    if (!Hash::check($request->current_password, $user->password)) {
-        return response()->json([
-            'success' => false,
-            'message' => 'Current password is incorrect'
-        ], 401);
-    }
-    
-    // Update password
-    $user->password = Hash::make($request->new_password);
-    $user->save();
-    
-    return response()->json([
-        'success' => true,
-        'message' => 'Password changed successfully'
-    ]);
-}
+public function changePassword(Request $request)
+    {
+        try {
+            // Log the request details for debugging
+            Log::debug('Password change request headers:', $request->headers->all());
+            Log::debug('Password change request method:', ['method' => $request->method()]);
+            Log::debug('Password change request format:', ['format' => $request->format()]);
+            
+            // Validate request
+            $validated = $request->validate([
+                'current_password' => 'required|string',
+                'new_password' => 'required|string|min:8',
+                'new_password_confirmation' => 'required|same:new_password',
+            ]);
+            
+            // Get the authenticated user
+            $user = null;
+            
+            // Try session auth first
+            if (Auth::check()) {
+                $user = Auth::user();
+                Log::debug('User found via session auth', ['user_id' => $user->id]);
+            } 
+            // Then try token auth
+            elseif ($request->bearerToken()) {
+                $token = PersonalAccessToken::findToken($request->bearerToken());
+                if ($token) {
+                    $user = $token->tokenable;
+                    Log::debug('User found via token auth', ['user_id' => $user->id]);
+                }
+            }
+            
+            if (!$user) {
+                Log::warning('No authenticated user found for password change');
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Authentication required'
+                ], 401);
+            }
+            
+            // Check if current password is correct
+            if (!Hash::check($validated['current_password'], $user->password)) {
+                Log::warning('Invalid current password for user', ['user_id' => $user->id]);
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Current password is incorrect'
+                ], 422);
+            }
+            
+            // Update password
+            $user->password = Hash::make($validated['new_password']);
+            
+            // If this is a first-time login, update the flag
+            if ($request->has('first_time_login') && $request->input('first_time_login') === true) {
+                $user->password_change_required = false;
+            }
+            
+            $user->save();
+            
+            Log::info('Password changed successfully for user', ['user_id' => $user->id]);
+            
+            // Generate a fresh token for the user if using token auth
+            $token = null;
+            if ($request->bearerToken()) {
+                // Revoke the current token
+                $currentToken = PersonalAccessToken::findToken($request->bearerToken());
+                if ($currentToken) {
+                    $currentToken->delete();
+                }
+                
+                // Create a new token
+                $token = $user->createToken('auth_token')->plainTextToken;
+            }
+            
+            return response()->json([
+                'success' => true,
+                'message' => 'Password changed successfully',
+                'token' => $token
+            ]);
+            
+        } catch (ValidationException $e) {
+            Log::error('Password change validation error:', [
+                'errors' => $e->errors(),
+            ]);
+            
+            return response()->json([
+                'success' => false,
+                'message' => 'Validation error',
+                'errors' => $e->errors()
+            ], 422);
+            
+        } catch (\Exception $e) {
+            Log::error('Password change exception:', [
+                'message' => $e->getMessage(),
+                'trace' => $e->getTraceAsString(),
+            ]);
+            
+            return response()->json([
+                'success' => false,
+                'message' => 'An error occurred while changing password',
+                'debug' => config('app.debug') ? $e->getMessage() : null
+            ], 500);
+        }}
 
     public function logout(Request $request)
     {

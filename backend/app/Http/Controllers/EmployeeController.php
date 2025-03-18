@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\Employee;
 use Illuminate\Http\Request;
+use App\Models\LoanApplication;
 use Illuminate\Support\Facades\Auth;
 
 class EmployeeController extends Controller
@@ -49,4 +50,29 @@ class EmployeeController extends Controller
             'employee' => $employee
         ]);
     }
+    public function getLoans(Request $request)
+    {
+        $loans = LoanApplication::where('employee_id', Auth::user()->employee_id)
+        ->orderBy('created_at', 'desc')
+        ->get();
+        $stats = [
+            'total' => $loans->count(),
+            'pending' => $loans->where('status', 'Pending')->count(),
+            'approved' => $loans->where('status', 'Approved')->count(),
+            'rejected' => $loans->where('status', 'Rejected')->count(),
+        ];
+        return response()->json([
+            'loans' => $loans,
+            'stats' => $stats
+        ]);
+    }
+    public function getLoanDetails($id)
+    {
+        $loan = LoanApplication::with(['employee', 'processedBy'])
+        ->where('employee_id', Auth::user()->employee_id)
+        ->findOrFail($id);
+        return response()->json($loan);
+    }
+
+    
 }
