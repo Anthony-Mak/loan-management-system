@@ -22,7 +22,7 @@ return new class extends Migration
     public function down(): void
     {
         Schema::table('personal_access_tokens', function (Blueprint $table) {
-            $table->unsignedBigInteger('tokenable_id')->change();
+            $table->string('tokenable_id')->change();
         });
     }
 };

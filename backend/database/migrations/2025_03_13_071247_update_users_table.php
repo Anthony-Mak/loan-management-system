@@ -18,6 +18,9 @@ return new class extends Migration
             // Rename id to user_id and change type (requires dropping and recreating)
             $table->dropColumn('id');
             $table->string('user_id', 255)->primary();
+            if (!Schema::hasColumn('users', 'password')) {
+                $table->string('password');
+            }
             
             // Add your new columns
             $table->string('employee_id', 30)->nullable();

@@ -35,6 +35,8 @@ Route::middleware([
     Route::post('/submit-application', [ApiController::class, 'submitLoanApplication']);
     Route::get('/check-status', [ApiController::class, 'checkApplicationStatus']);
     Route::get('/loan-pdf/{id}', [ApiController::class, 'downloadLoanPDF']);
+
+    
     
     // Protected routes
     Route::middleware('auth:sanctum')->group(function() {

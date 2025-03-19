@@ -95,15 +95,10 @@ class LoanApplicationController extends Controller
             ]);
             
             DB::commit();
-            
-            // Generate PDF for HR download
-            $pdf = $this->generatePDF($loanApplication->loan_id);
-            
-            return response()->json([
-                'message' => 'Loan application submitted successfully',
-                'loan_id' => $loanApplication->loan_id,
-                'pdf_url' => route('loan.pdf.download', $loanApplication->loan_id)
-            ], 201);
+
+            // Redirect to the loan policy page with the loan ID
+            return redirect()->route('employee.loan.policy', ['loan' => $loanApplication->loan_id]);
+
             
         } catch (\Exception $e) {
             DB::rollBack();
@@ -124,6 +119,34 @@ class LoanApplicationController extends Controller
             'employee' => $employee,
             'bankingDetails' => $employee->bankingDetails ?? null
         ]);
+    }
+
+    public function showPolicy(Request $request, $loanId)
+    {
+        $loan = LoanApplication::findOrFail($loanId);
+    
+        // Check if this loan belongs to the authenticated user
+        if ($loan->employee_id !== Auth::user()->employee_id) {
+            abort(403);
+        }
+        return view('employee.loan.loan_policy', compact('loan'));
+    }
+
+    public function storePledge(Request $request)
+    {
+        $request->validate([
+            'loan_id' => 'required|exists:loan_applications,loan_id',
+            'signature' => 'required|string'
+        ]);
+        $loan = LoanApplication::findOrFail($request->loan_id);
+        // Store the signature acknowledgment
+        $loan->update([
+            'policy_acknowledged' => true,
+            'policy_signature' => $request->signature,
+            'policy_date' => now()
+        ]);
+        // Redirect to the pledge form
+        return redirect()->route('employee.loan.pledge_form', ['loan' => $loan->loan_id]);
     }
     
     /**

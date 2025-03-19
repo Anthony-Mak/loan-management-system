@@ -15,6 +15,8 @@ return new class extends Migration
             $table->id('loan_id');
             $table->string('employee_id', 50); 
             $table->foreign('employee_id')->references('employee_id')->on('employees');
+            $table->unsignedBigInteger('loan_type_id')->nullable();
+            $table->foreign('loan_type_id')->references('loan_type_id')->on('loan_types');
             $table->decimal('amount', 10, 2);
             $table->text('purpose')->nullable();
             $table->enum('status', ['Pending', 'Approved', 'Rejected'])->default('Pending');

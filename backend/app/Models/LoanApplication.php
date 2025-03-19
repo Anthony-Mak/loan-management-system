@@ -18,6 +18,7 @@ class LoanApplication extends Model
         'review_notes',
         'processed_by',
         'processed_date'
+        
     ];
     
     public function employee()

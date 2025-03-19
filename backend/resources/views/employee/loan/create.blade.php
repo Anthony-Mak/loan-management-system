@@ -1,10 +1,3 @@
-I'll help you complete the missing parts of your create.blade.php file based on the existing HTML template. Let me analyze what's already present and what needs to be added.
-
-Looking at the documents you provided, I can see that the first document is your partially completed create.blade.php file, and the second contains the HTML template you're working from. The create.blade.php file appears to be cut off at the collateral security section.
-
-Here's the completed version of your create.blade.php file, adding the missing sections:
-
-```php
 {{-- resources/views/employee/loan/create.blade.php --}}
 <!DOCTYPE html>
 <html lang="en">
@@ -690,7 +683,7 @@ Here's the completed version of your create.blade.php file, adding the missing s
             <h3>Declaration By Applicant</h3>
             <p>I hereby declare that the information provided is true and accurate.</p>
 
-            <button type="submit">Submit Application</button>
+            <button type="submit">Next</button>
         </form>
     </div>
 
