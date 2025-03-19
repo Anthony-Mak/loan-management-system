@@ -49,6 +49,14 @@ Route::middleware(['auth'])->group(function() {
         ->name('employee.loan.store')
         ->middleware('auth', 'role:employee');
 
+        Route::get('/employee/loan/{loan}/pledge', [LoanApplicationController::class, 'showPledgeForm'])
+            ->name('employee.loan.pledge_form')
+            ->middleware(['auth', 'role:employee']);
+    
+        Route::post('/employee/loan/store-pledge', [LoanApplicationController::class, 'storePledge'])
+            ->name('employee.loan.store_pledge')
+            ->middleware(['auth', 'role:employee']);
+
     });
     Route::get('/employee/loan/{loan}/policy', [LoanApplicationController::class, 'showPolicy'])->name('employee.loan.policy');
     Route::post('/employee/loan/pledge', [LoanApplicationController::class, 'storePledge'])->name('employee.loan.pledge');

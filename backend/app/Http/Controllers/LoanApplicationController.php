@@ -10,6 +10,7 @@ use App\Models\LoanType;
 use App\Http\Requests\LoanApplicationRequest;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
+use App\Models\Collateral;
 
 class LoanApplicationController extends Controller
 {
@@ -132,21 +133,83 @@ class LoanApplicationController extends Controller
         return view('employee.loan.loan_policy', compact('loan'));
     }
 
+    /**
+ * Show the pledge form
+ */
+    public function showPledgeForm(Request $request, $loanId)
+    {
+        $loan = LoanApplication::with(['employee', 'loanType'])
+        ->findOrFail($loanId);
+        
+        // Check if this loan belongs to the authenticated user
+        if ($loan->employee_id !== Auth::user()->employee_id) {
+            abort(403);
+        }
+    
+        // Check if the policy has been acknowledged
+        if (!$loan->policy_acknowledged) {
+            return redirect()->route('employee.loan.policy', ['loan' => $loan->loan_id])
+                ->with('error', 'You must acknowledge the loan policy before proceeding to the pledge form.');
+            }
+            
+            return view('employee.loan.pledge_form', compact('loan'));
+    }
+
+
     public function storePledge(Request $request)
     {
         $request->validate([
             'loan_id' => 'required|exists:loan_applications,loan_id',
-            'signature' => 'required|string'
+            'name' => 'required|string|max:100',
+            'national_id' => 'required|string|max:30',
+            'address' => 'required|string',
+            'location' => 'required|string|max:100',
+            'signature' => 'required|string|max:100',
+            'registration_number' => 'nullable|string|max:20',
+            'assets' => 'required|array',
+            'assets.*.description' => 'nullable|string',
+            'assets.*.value' => 'nullable|numeric'
         ]);
+        
         $loan = LoanApplication::findOrFail($request->loan_id);
-        // Store the signature acknowledgment
-        $loan->update([
-            'policy_acknowledged' => true,
-            'policy_signature' => $request->signature,
-            'policy_date' => now()
-        ]);
-        // Redirect to the pledge form
-        return redirect()->route('employee.loan.pledge_form', ['loan' => $loan->loan_id]);
+    
+        // Check if this loan belongs to the authenticated user
+        if ($loan->employee_id !== Auth::user()->employee_id) {
+            abort(403);
+        }
+        
+        DB::beginTransaction();
+        try {
+            // Update loan with pledge acknowledgment
+            $loan->update([
+                'pledge_acknowledged' => true,
+                'pledge_signature' => $request->signature,
+                'pledge_date' => now()
+            ]);
+        
+            // Store the assets as collateral
+            foreach ($request->assets as $asset) {
+                if (!empty($asset['description']) && !empty($asset['value'])) {
+                    Collateral::create([
+                        'loan_id' => $loan->loan_id,
+                        'asset_description' => $asset['description'],
+                        'estimated_value' => $asset['value'],
+                        'vehicle_registration_number' => $request->registration_number ?? null,
+                        'signature' => $request->signature,
+                        'location' => $request->location
+                    ]);
+                }
+            }
+            DB::commit();
+        
+            // Update loan status to "Submitted"
+            $loan->update(['status' => 'Submitted']);
+            return redirect()->route('employee.dashboard')
+                ->with('success', 'Your loan application has been successfully submitted with the pledged assets.');
+        } catch (\Exception $e) {
+            DB::rollBack();
+            return back()->with('error', 'Failed to submit pledge information: ' . $e->getMessage())->withInput();
+        }
     }
     
     /**
