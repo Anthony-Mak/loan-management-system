@@ -3,6 +3,7 @@
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\AuthController;
 use App\Http\Controllers\LoanApplicationController;
+use App\Http\Controllers\AdminController;
 
 /*
 |--------------------------------------------------------------------------
@@ -15,54 +16,42 @@ Route::get('/', function () {
     return view('welcome');
 });
 
-// Login routes
+// Authentication routes
 Route::get('/login', function () {
     return view('auth.login');
 })->name('login');
-
-// Handle login submission via web form
 Route::post('/login', [AuthController::class, 'login'])->name('login.submit');
-
-
 
 // Protected routes
 Route::middleware(['auth'])->group(function() {
-    // Logout route
+    // Common authenticated routes
     Route::post('/logout', [AuthController::class, 'logout'])->name('logout');
+    Route::post('/change-password', [AuthController::class, 'changePassword'])->name('password.change.auth');
+    Route::get('/employee/loan/{loan}/policy', [LoanApplicationController::class, 'showPolicy'])->name('employee.loan.policy');
+    Route::post('/employee/loan/pledge', [LoanApplicationController::class, 'storePledge'])->name('employee.loan.pledge');
 
-     // Change password route
-     Route::post('/change-password', [AuthController::class, 'changePassword'])->name('password.change.auth');
-    
-    
-    
     // Employee portal routes
-    Route::middleware(['auth', 'role:employee'])->prefix('employee')->group(function () {
+    Route::middleware(['role:employee'])->prefix('employee')->group(function () {
         Route::get('/dashboard', function () {
             return view('employee.dashboard');
         })->name('employee.dashboard');
-
+        
         Route::get('/apply', [LoanApplicationController::class, 'create'])->name('employee.apply');
         Route::get('/history', function () {
             return view('employee.history');
         })->name('employee.history');
-        Route::post('/loans', [LoanApplicationController::class, 'store'])
-        ->name('employee.loan.store')
-        ->middleware('auth', 'role:employee');
-
-        Route::get('/employee/loan/{loan}/pledge', [LoanApplicationController::class, 'showPledgeForm'])
-            ->name('employee.loan.pledge_form')
-            ->middleware(['auth', 'role:employee']);
-    
-        Route::post('/employee/loan/store-pledge', [LoanApplicationController::class, 'storePledge'])
-            ->name('employee.loan.store_pledge')
-            ->middleware(['auth', 'role:employee']);
-
+        
+        Route::post('/loans', [LoanApplicationController::class, 'store'])->name('employee.loan.store');
+        
+        Route::get('/loan/{loan}/pledge', [LoanApplicationController::class, 'showPledgeForm'])
+            ->name('employee.loan.pledge_form');
+        
+        Route::post('/loan/store-pledge', [LoanApplicationController::class, 'storePledge'])
+            ->name('employee.loan.store_pledge');
     });
-    Route::get('/employee/loan/{loan}/policy', [LoanApplicationController::class, 'showPolicy'])->name('employee.loan.policy');
-    Route::post('/employee/loan/pledge', [LoanApplicationController::class, 'storePledge'])->name('employee.loan.pledge');
-    
+
     // Admin portal routes
-    Route::middleware(['auth', 'role:admin'])->prefix('admin')->group(function () {
+    Route::middleware(['role:admin'])->prefix('admin')->group(function () {
         Route::get('/dashboard', function () {
             return view('admin.dashboard');
         })->name('admin.dashboard');
