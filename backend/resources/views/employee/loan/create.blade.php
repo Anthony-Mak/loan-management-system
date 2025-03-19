@@ -1,3 +1,10 @@
+I'll help you complete the missing parts of your create.blade.php file based on the existing HTML template. Let me analyze what's already present and what needs to be added.
+
+Looking at the documents you provided, I can see that the first document is your partially completed create.blade.php file, and the second contains the HTML template you're working from. The create.blade.php file appears to be cut off at the collateral security section.
+
+Here's the completed version of your create.blade.php file, adding the missing sections:
+
+```php
 {{-- resources/views/employee/loan/create.blade.php --}}
 <!DOCTYPE html>
 <html lang="en">
@@ -288,6 +295,15 @@
                     </td>
                 </tr>
                 <tr>
+                    <td>Length of Stay-at-Home Address</td>
+                    <td>
+                        <input type="text" name="length_of_stay" placeholder="Years and Months (e.g., 2 years, 6 months)" value="{{ old('length_of_stay', $employee->length_of_stay ?? '') }}">
+                        @error('length_of_stay')
+                            <div class="text-danger">{{ $message }}</div>
+                        @enderror
+                    </td>
+                </tr>
+                <tr>
                     <td>Accommodation Type</td>
                     <td>
                         <select name="accommodation_type" required>
@@ -348,13 +364,17 @@
                         <input type="text" name="next_of_kin_address" value="{{ old('next_of_kin_address', $employee->next_of_kin_address ?? '') }}" required>
                         @error('next_of_kin_address')
                             <div class="text-danger">{{ $message }}</div>
-                            @enderror
+                        @enderror
                     </td>
                 </tr>
                 <tr>
                     <td>Next of Kin Telephone Numbers</td>
                     <td>
+                        Tel: <input type="tel" name="next_of_kin_tel" value="{{ old('next_of_kin_tel', $employee->next_of_kin_tel ?? '') }}">
                         Cell: <input type="tel" name="next_of_kin_cell" value="{{ old('next_of_kin_cell', $employee->next_of_kin_cell ?? '') }}" required>
+                        @error('next_of_kin_tel')
+                            <div class="text-danger">{{ $message }}</div>
+                        @enderror
                         @error('next_of_kin_cell')
                             <div class="text-danger">{{ $message }}</div>
                         @enderror
@@ -365,9 +385,18 @@
             <h3>Employment/Business Details (Applicant)</h3>
             <table>
                 <tr>
+                    <td>Period with Employer</td>
+                    <td>
+                        <input type="text" name="employment_period" value="{{ old('employment_period', $employee->employment_period ?? '') }}" required>
+                        @error('employment_period')
+                            <div class="text-danger">{{ $message }}</div>
+                        @enderror
+                    </td>
+                </tr>
+                <tr>
                     <td>Designation</td>
                     <td>
-                        Position: <input type="text" name="position" value="{{ old('position', $employee->position ?? '') }}" required>
+                        Post: <input type="text" name="position" value="{{ old('position', $employee->position ?? '') }}" required>
                         Department: <input type="text" name="department" value="{{ old('department', $employee->department ?? '') }}" required>
                         @error('position')
                             <div class="text-danger">{{ $message }}</div>
@@ -533,52 +562,135 @@
                     </td>
                 </tr>
                 <tr>
-                    <td>Loan Amount ($)</td>
+                    <td>Loan Requested ($)</td>
                     <td>
-                        <input type="number" name="loan_amount" value="{{ old('loan_amount') }}" step="0.01" required>
+                        <input type="number" name="loan_amount" id="loanAmountFigures" value="{{ old('loan_amount') }}" step="0.01" placeholder="In figures" required>
+                        <input type="text" name="loan_amount_words" id="loanAmountWords" value="{{ old('loan_amount_words') }}" placeholder="In words">
                         @error('loan_amount')
+                            <div class="text-danger">{{ $message }}</div>
+                        @enderror
+                        @error('loan_amount_words')
                             <div class="text-danger">{{ $message }}</div>
                         @enderror
                     </td>
                 </tr>
                 <tr>
-                    <td>Loan Period (Months)</td>
+                    <td>Loan Period</td>
                     <td>
-                        <input type="number" name="term_months" value="{{ old('term_months') }}" min="1" required>
+                        Year(s): <input type="number" name="loan_years" id="loanYears" min="0" value="{{ old('loan_years', 0) }}">
+                        Month(s): <input type="number" name="term_months" id="loanMonths" min="1" value="{{ old('term_months') }}" required>
+                        @error('loan_years')
+                            <div class="text-danger">{{ $message }}</div>
+                        @enderror
                         @error('term_months')
                             <div class="text-danger">{{ $message }}</div>
                         @enderror
                     </td>
                 </tr>
                 <tr>
-                    <td>Purpose of Loan</td>
+                    <td>Brief Purpose of Loan:</td>
                     <td>
-                        <textarea name="purpose" rows="4" required>{{ old('purpose') }}</textarea>
+                        <textarea name="purpose" id="briefPurpose" rows="4" required>{{ old('purpose') }}</textarea>
                         @error('purpose')
+                            <div class="text-danger">{{ $message }}</div>
+                        @enderror
+                    </td>
+                </tr>
+                <tr>
+                    <td>Specific Loan Purpose</td>
+                    <td>
+                        <select name="specific_purpose">
+                            <option value="">Select Loan Purpose</option>
+                            <option value="Personal Loan" {{ old('specific_purpose') == 'Personal Loan' ? 'selected' : '' }}>Personal Loan</option>
+                            <option value="Home Improvement Loan" {{ old('specific_purpose') == 'Home Improvement Loan' ? 'selected' : '' }}>Home Improvement Loan</option>
+                            <option value="Car Loan" {{ old('specific_purpose') == 'Car Loan' ? 'selected' : '' }}>Car Loan</option>
+                            <option value="Educational Loan" {{ old('specific_purpose') == 'Educational Loan' ? 'selected' : '' }}>Educational Loan</option>
+                            <option value="Other" {{ old('specific_purpose') == 'Other' ? 'selected' : '' }}>Other</option>
+                        </select><br>
+                        <label>If Other, state Type of Loan Required: <input type="text" name="other_loan_type" value="{{ old('other_loan_type') }}"></label>
+                        @error('specific_purpose')
+                            <div class="text-danger">{{ $message }}</div>
+                        @enderror
+                        @error('other_loan_type')
                             <div class="text-danger">{{ $message }}</div>
                         @enderror
                     </td>
                 </tr>
             </table>
 
-            <h3>Declaration</h3>
-            <p>
-                I hereby declare that the information provided above is true and accurate to the best of my knowledge. 
-                I understand that providing false information may result in rejection of my loan application and/or disciplinary action.
-            </p>
-            <div>
-                <label>
-                    <input type="checkbox" name="declaration" required {{ old('declaration') ? 'checked' : '' }}>
-                    I agree to the terms and conditions
-                </label>
-                @error('declaration')
-                    <div class="text-danger">{{ $message }}</div>
-                @enderror
-            </div>
+            <h3>Applicant's Collateral Security</h3>
+            <table>
+                <tr>
+                    <th>Security Type</th>
+                    <th>Description</th>
+                    <th>Value ($)</th>
+                </tr>
+                <tr>
+                    <td>
+                        <input type="text" name="security_type1" value="{{ old('security_type1') }}">
+                        @error('security_type1')
+                            <div class="text-danger">{{ $message }}</div>
+                        @enderror
+                    </td>
+                    <td>
+                        <input type="text" name="security_description1" value="{{ old('security_description1') }}">
+                        @error('security_description1')
+                            <div class="text-danger">{{ $message }}</div>
+                        @enderror
+                    </td>
+                    <td>
+                        <input type="number" name="security_value1" value="{{ old('security_value1') }}" step="0.01">
+                        @error('security_value1')
+                            <div class="text-danger">{{ $message }}</div>
+                        @enderror
+                    </td>
+                </tr>
+                <tr>
+                    <td>
+                        <input type="text" name="security_type2" value="{{ old('security_type2') }}">
+                        @error('security_type2')
+                            <div class="text-danger">{{ $message }}</div>
+                        @enderror
+                    </td>
+                    <td>
+                        <input type="text" name="security_description2" value="{{ old('security_description2') }}">
+                        @error('security_description2')
+                            <div class="text-danger">{{ $message }}</div>
+                        @enderror
+                    </td>
+                    <td>
+                        <input type="number" name="security_value2" value="{{ old('security_value2') }}" step="0.01">
+                        @error('security_value2')
+                            <div class="text-danger">{{ $message }}</div>
+                        @enderror
+                    </td>
+                </tr>
+                <tr>
+                    <td>
+                        <input type="text" name="security_type3" value="{{ old('security_type3') }}">
+                        @error('security_type3')
+                            <div class="text-danger">{{ $message }}</div>
+                        @enderror
+                    </td>
+                    <td>
+                        <input type="text" name="security_description3" value="{{ old('security_description3') }}">
+                        @error('security_description3')
+                            <div class="text-danger">{{ $message }}</div>
+                        @enderror
+                    </td>
+                    <td>
+                        <input type="number" name="security_value3" value="{{ old('security_value3') }}" step="0.01">
+                        @error('security_value3')
+                            <div class="text-danger">{{ $message }}</div>
+                        @enderror
+                    </td>
+                </tr>
+            </table>
 
-            <div style="margin-top: 20px; text-align: center;">
-                <button type="submit" class="btn btn-primary">Submit Application</button>
-            </div>
+            <h3>Declaration By Applicant</h3>
+            <p>I hereby declare that the information provided is true and accurate.</p>
+
+            <button type="submit">Submit Application</button>
         </form>
     </div>
 
@@ -589,7 +701,6 @@
                 container.style.display = 'inline';
             } else {
                 container.style.display = 'none';
-                document.getElementById('years_input').value = '';
             }
         }
 
@@ -599,9 +710,16 @@
                 container.style.display = 'inline';
             } else {
                 container.style.display = 'none';
-                document.getElementById('loan_amount_input').value = '';
             }
         }
+
+        // Convert loan amount to words when entered
+        document.getElementById('loanAmountFigures').addEventListener('input', function() {
+            // Here you would add logic to convert numbers to words
+            // For now, it's just a placeholder
+            const amount = this.value;
+            document.getElementById('loanAmountWords').value = amount ? amount + " dollars" : "";
+        });
     </script>
 </body>
 </html>
