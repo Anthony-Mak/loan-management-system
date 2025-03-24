@@ -42,12 +42,19 @@ Route::middleware(['auth'])->group(function() {
         })->name('employee.history');
         
         Route::post('/loans', [LoanApplicationController::class, 'store'])->name('employee.loan.store');
+
+      /*Route::get('/employee/loan/{loan}/edit', [LoanApplicationController::class, 'edit'])->name('employee.loan.edit');
+
+        Route::put('/employee/loan/{loan}', [LoanApplicationController::class, 'update'])->name('employee.loan.update');*/
+
+        Route::post('employee/loan/policy', 'App\Http\Controllers\LoanApplicationController@storePolicyAcknowledgment')
+        ->name('employee.loan.policy.store');
         
-        Route::get('/loan/{loan}/pledge', [LoanApplicationController::class, 'showPledgeForm'])
-            ->name('employee.loan.pledge_form');
+        Route::get('/loan/{loan}/pledge', [LoanApplicationController::class, 'showPledgeForm'])->name('employee.loan.pledge_form');
         
-        Route::post('/loan/store-pledge', [LoanApplicationController::class, 'storePledge'])
-            ->name('employee.loan.store_pledge');
+        Route::post('/loan/pledge', [LoanApplicationController::class, 'storePledge'])->name('employee.loan.store_pledge');
+
+        Route::post('/employee/loan/policy-acknowledge', [LoanApplicationController::class, 'acknowledgePolicyRoute'])->name('employee.loan.acknowledge_policy');
     });
 
     // Admin portal routes

@@ -156,16 +156,15 @@
             <h2>ACKNOWLEDGEMENT BY EMPLOYEE</h2>
             <p>By clicking the Next Button, I hereby duly acknowledge that I have read and understood the Staff Loan Policy attached hereto and agree to the terms and conditions set out therein.</p>
             
-            <form action="{{ route('employee.loan.pledge') }}" method="POST">
+            <form action="{{ route('employee.loan.policy.store') }}" method="POST">
                 @csrf
-                <input type="hidden" name="loan_id" value="{{ $loan->id ?? '' }}">
+                <input type="hidden" name="loan_id" value="{{ $loan->loan_id }}">
                 
                 <p>
                     Signature (Enter initials): <input type="text" class="signature-input" id="employeeSignature" name="signature" placeholder="Enter Signature" required>
                     Date: <span class="date-display" id="currentDate"></span>
                 </p>
                 
-                <button type="button" onclick="window.location.href='{{ route('employee.loan.edit', $loan->id ?? 0) }}'">Back</button>
                 <button type="submit">Next</button>
             </form>
         </div>

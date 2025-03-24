@@ -11,12 +11,21 @@ use App\Http\Requests\LoanApplicationRequest;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use App\Models\Collateral;
+use \Log;
 
 class LoanApplicationController extends Controller
 {
     /**
      * Display a listing of the user's loan applications
      */
+    public function __construct()
+{
+    Log::debug('Database configuration:', [
+        'connection' => config('database.default'),
+        'database' => config('database.connections.' . config('database.default') . '.database'),
+        'strict' => config('database.connections.' . config('database.default') . '.strict')
+    ]);
+}
     public function history()
     {
         $user = Auth::user();
@@ -36,9 +45,19 @@ class LoanApplicationController extends Controller
         DB::beginTransaction();
         
         try {
+            
+            
             $user = Auth::user();
             $employeeId = $user->employee_id;
-            
+
+            Log::debug('Processing loan application:', [
+                'employee_id' => $user->employee_id,
+                'request_data' => $request->all()
+            ]);
+             // Update or create employee details
+        Log::debug('Attempting to update employee record:', [
+            'employee_id' => $user->employee_id
+        ]);
             // Update or create employee details
             $employee = Employee::updateOrCreate(
                 ['employee_id' => $employeeId],
@@ -53,7 +72,6 @@ class LoanApplicationController extends Controller
                     'physical_address' => $request->physical_address,
                     'accommodation_type' => $request->accommodation_type,
                     'postal_address' => $request->postal_address,
-                    'telephone' => $request->telephone,
                     'cell_phone' => $request->cell_phone,
                     'email' => $request->email,
                     'next_of_kin' => $request->next_of_kin,
@@ -65,6 +83,14 @@ class LoanApplicationController extends Controller
                     'salary_net' => $request->salary_net
                 ]
             );
+            Log::debug('Employee record processed successfully:', [
+                'employee_id' => $employee->employee_id,
+                'full_name' => $employee->full_name
+            ]);
+
+            Log::debug('Attempting to update banking details:', [
+                'employee_id' => $user->employee_id
+            ]);
             
             // Update or create banking details
             BankingDetail::updateOrCreate(
@@ -83,7 +109,16 @@ class LoanApplicationController extends Controller
                     'other_bank' => $request->other_bank,
                     'other_account_type' => $request->other_account_type
                 ]
+                
+
             );
+            
+            Log::debug('Creating new loan application:', [
+                'loan_type_id' => $request->loan_type_id,
+                'amount' => $request->loan_amount,
+                'term_months' => $request->term_months
+            ]);
+            
             
             // Create new loan application
             $loanApplication = LoanApplication::create([
@@ -94,19 +129,38 @@ class LoanApplicationController extends Controller
                 'purpose' => $request->purpose,
                 'status' => 'Pending'
             ]);
+
+            Log::debug('Loan application created successfully:', [
+                'loan_id' => $loanApplication->loan_id,
+                'amount' => $loanApplication->amount,
+                'status' => $loanApplication->status
+            ]);
             
             DB::commit();
+            Log::info('Loan application created successfully', [
+                'loan_id' =>$loanApplication->loan_id]);
 
+                Log::debug('Preparing to redirect user:', [
+                    'loan_id' => $loanApplication->loan_id,
+                    'redirect_path' => route('employee.loan.policy', ['loan' => $loanApplication->loan_id])
+                ]);
             // Redirect to the loan policy page with the loan ID
-            return redirect()->route('employee.loan.policy', ['loan' => $loanApplication->loan_id]);
+            return redirect()->route('employee.loan.policy', ['loan' => $loanApplication->loan_id])
+            ->with('success', 'Loan application submitted successfully.');
 
             
         } catch (\Exception $e) {
             DB::rollBack();
-            return response()->json([
-                'message' => 'Failed to submit loan application',
-                'error' => $e->getMessage()
-            ], 500);
+            Log::error('Failed to create loan application:', [
+                'error_message' => $e->getMessage(),
+                'error_code' => $e->getCode(),
+                'error_file' => $e->getFile(),
+                'error_line' => $e->getLine()
+            ]);
+            return redirect()
+            ->back()
+            ->withInput()
+            ->with('error', 'Failed to submit loan application: ' . $e->getMessage());
         }
     }
     public function create()
@@ -132,85 +186,165 @@ class LoanApplicationController extends Controller
         }
         return view('employee.loan.loan_policy', compact('loan'));
     }
+ /*   public function storePolicyAcknowledgment(Request $request)
+{
+    Log::debug('Policy acknowledgment requested:', [
+        'loan_id' => $request->loan_id,
+        'signature' => $request->signature
+    ]);
+    
+    $request->validate([
+        'loan_id' => 'required|exists:loan_applications,loan_id',
+        'signature' => 'required|string|max:100'
+    ]);
+    
+    $loan = LoanApplication::findOrFail($request->loan_id);
+    
+    // Check if this loan belongs to the authenticated user
+    if ($loan->employee_id !== Auth::user()->employee_id) {
+        Log::error('Unauthorized policy acknowledgment attempt', [
+            'loan_id' => $request->loan_id,
+            'user_id' => Auth::user()->id,
+            'employee_id' => Auth::user()->employee_id
+        ]);
+        abort(403);
+    }
+    
+    try {
+        // Update loan with policy acknowledgment
+        $loan->update([
+            'policy_acknowledged' => true,
+            'policy_signature' => $request->signature,
+            'policy_date' => now()
+        ]);
+        
+        Log::info('Policy acknowledgment successful', [
+            'loan_id' => $loan->loan_id,
+            'redirect_to' => route('employee.loan.pledge', ['loan' => $loan->loan_id])
+        ]);
+        
+        return redirect()->route('employee.loan.pledge', ['loan' => $loan->loan_id])
+            ->with('success', 'Loan policy acknowledged successfully.');
+    } catch (\Exception $e) {
+        Log::error('Policy acknowledgment failed', [
+            'loan_id' => $request->loan_id,
+            'error' => $e->getMessage()
+        ]);
+        
+        return back()->with('error', 'Failed to acknowledge policy: ' . $e->getMessage());
+    }
+}*/
+
+public function storePolicyAcknowledgment(Request $request)
+{
+    $request->validate([
+        'loan_id' => 'required|exists:loan_applications,loan_id',
+        'signature' => 'required|string|max:100'
+    ]);
+    
+    $loan = LoanApplication::findOrFail($request->loan_id);
+    
+    // Check if this loan belongs to the authenticated user
+    if ($loan->employee_id !== Auth::user()->employee_id) {
+        Log::error('Unauthorized policy acknowledgment attempt', [
+            'loan_id' => $request->loan_id,
+            'user_id' => Auth::user()->id,
+            'employee_id' => Auth::user()->employee_id
+        ]);
+        abort(403);
+    }
+    
+    // Skip the database update and proceed directly to the next step
+    Log::info('Policy acknowledgment bypassed', [
+        'loan_id' => $loan->loan_id,
+        'redirect_to' => route('employee.loan.pledge_form', ['loan' => $loan->loan_id])
+    ]);
+    
+    return redirect()->route('employee.loan.pledge_form', ['loan' => $loan->loan_id])
+        ->with('success', 'Proceeding to pledge form.');
+}
 
     /**
  * Show the pledge form
  */
-    public function showPledgeForm(Request $request, $loanId)
-    {
-        $loan = LoanApplication::with(['employee', 'loanType'])
+public function showPledgeForm(Request $request, $loanId)
+{
+    $loan = LoanApplication::with(['employee', 'loanType'])
         ->findOrFail($loanId);
-        
-        // Check if this loan belongs to the authenticated user
-        if ($loan->employee_id !== Auth::user()->employee_id) {
-            abort(403);
-        }
     
-        // Check if the policy has been acknowledged
-        if (!$loan->policy_acknowledged) {
-            return redirect()->route('employee.loan.policy', ['loan' => $loan->loan_id])
-                ->with('error', 'You must acknowledge the loan policy before proceeding to the pledge form.');
-            }
-            
-            return view('employee.loan.pledge_form', compact('loan'));
+    // Check if this loan belongs to the authenticated user
+    if ($loan->employee_id !== Auth::user()->employee_id) {
+        abort(403, 'Unauthorized access');
     }
 
+    return view('employee.loan.pledge_form', compact('loan'));
+}
 
-    public function storePledge(Request $request)
-    {
-        $request->validate([
-            'loan_id' => 'required|exists:loan_applications,loan_id',
-            'name' => 'required|string|max:100',
-            'national_id' => 'required|string|max:30',
-            'address' => 'required|string',
-            'location' => 'required|string|max:100',
-            'signature' => 'required|string|max:100',
-            'registration_number' => 'nullable|string|max:20',
-            'assets' => 'required|array',
-            'assets.*.description' => 'nullable|string',
-            'assets.*.value' => 'nullable|numeric'
+public function storePledge(Request $request)
+{
+    $validated = $request->validate([
+        'loan_id' => 'required|exists:loan_applications,loan_id',
+        'name' => 'required|string|max:100',
+        'national_id' => 'required|string|max:30',
+        'address' => 'required|string',
+        'location' => 'required|string|max:100',
+        'signature' => 'required|string|max:100',
+        'registration_number' => 'nullable|string|max:20',
+        'assets' => 'required|array',
+        'assets.*.description' => 'nullable|string',
+        'assets.*.value' => 'nullable|numeric'
+    ]);
+
+    $loan = LoanApplication::findOrFail($request->loan_id);
+
+    // Check if this loan belongs to the authenticated user
+    if ($loan->employee_id !== Auth::user()->employee_id) {
+        abort(403, 'Unauthorized access');
+    }
+
+    DB::beginTransaction();
+    try {
+        // Update loan with pledge acknowledgment
+        $loan->update([
+            'pledge_acknowledged' => true,
+            'pledge_signature' => $request->signature,
+            'pledge_date' => now()
         ]);
-        
-        $loan = LoanApplication::findOrFail($request->loan_id);
-    
-        // Check if this loan belongs to the authenticated user
-        if ($loan->employee_id !== Auth::user()->employee_id) {
-            abort(403);
-        }
-        
-        DB::beginTransaction();
-        try {
-            // Update loan with pledge acknowledgment
-            $loan->update([
-                'pledge_acknowledged' => true,
-                'pledge_signature' => $request->signature,
-                'pledge_date' => now()
-            ]);
-        
-            // Store the assets as collateral
-            foreach ($request->assets as $asset) {
-                if (!empty($asset['description']) && !empty($asset['value'])) {
-                    Collateral::create([
-                        'loan_id' => $loan->loan_id,
-                        'asset_description' => $asset['description'],
-                        'estimated_value' => $asset['value'],
-                        'vehicle_registration_number' => $request->registration_number ?? null,
-                        'signature' => $request->signature,
-                        'location' => $request->location
-                    ]);
-                }
+
+        // Store the assets as collateral
+        $hasValidAsset = false;
+        foreach ($request->assets as $asset) {
+            if (!empty($asset['description']) && !empty($asset['value'])) {
+                Collateral::create([
+                    'loan_id' => $loan->loan_id,
+                    'asset_description' => $asset['description'],
+                    'estimated_value' => $asset['value'],
+                    'vehicle_registration_number' => $request->registration_number,
+                    'signature' => $request->signature,
+                    'location' => $request->location
+                ]);
+                $hasValidAsset = true;
             }
-            DB::commit();
-        
-            // Update loan status to "Submitted"
-            $loan->update(['status' => 'Submitted']);
-            return redirect()->route('employee.dashboard')
-                ->with('success', 'Your loan application has been successfully submitted with the pledged assets.');
-        } catch (\Exception $e) {
-            DB::rollBack();
-            return back()->with('error', 'Failed to submit pledge information: ' . $e->getMessage())->withInput();
         }
+
+        if (!$hasValidAsset) {
+            throw new \Exception('At least one asset must be pledged.');
+        }
+
+        // Update loan status to "Submitted"
+        $loan->update(['status' => 'Submitted']);
+
+        DB::commit();
+
+        return redirect()->route('employee.dashboard')
+            ->with('success', 'Loan application has been successfully submitted with pledged assets.');
+    } catch (\Exception $e) {
+        DB::rollBack();
+        return back()
+            ->withInput()
+            ->with('error', 'Failed to submit pledge information: ' . $e->getMessage());
     }
+}
     
     /**
      * Generate PDF for HR download

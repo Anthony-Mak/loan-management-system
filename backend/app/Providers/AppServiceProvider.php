@@ -3,6 +3,8 @@
 namespace App\Providers;
 
 use Illuminate\Support\ServiceProvider;
+use Illuminate\Support\Facades\DB;
+use \Log;
 
 class AppServiceProvider extends ServiceProvider
 {
@@ -19,6 +21,25 @@ class AppServiceProvider extends ServiceProvider
      */
     public function boot(): void
     {
-        //
+        if (config('app.debug')) {
+            DB::listen(function ($query) {
+                $sql = $query->sql;
+                $bindings = $query->bindings;
+                $time = $query->time;
+                
+                // Format the SQL query with bindings for better readability
+                $formattedSql = $sql;
+                foreach ($bindings as $i => $binding) {
+                    $value = is_numeric($binding) ? $binding : "'{$binding}'";
+                    $formattedSql = preg_replace('/\?/', $value, $formattedSql, 1);
+                }
+                
+                Log::debug('Database query executed:', [
+                    'query' => $formattedSql,
+                    'execution_time_ms' => $time,
+                    'bindings_count' => count($bindings)
+                ]);
+            });
+        }
     }
 }

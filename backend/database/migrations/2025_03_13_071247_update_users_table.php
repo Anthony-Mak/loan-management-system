@@ -16,8 +16,12 @@ return new class extends Migration
             $table->dropColumn(['name', 'email', 'email_verified_at', 'remember_token']);
             
             // Rename id to user_id and change type (requires dropping and recreating)
-            $table->dropColumn('id');
-            $table->string('user_id', 255)->primary();
+            $table->renameColumn('id', 'user_id');
+
+            // Add login_id column to store the old string identifiers
+            $table->string('login_id', 255)->unique()->after('user_id');
+
+            
             if (!Schema::hasColumn('users', 'password')) {
                 $table->string('password');
             }
@@ -41,7 +45,11 @@ return new class extends Migration
         Schema::table('users', function (Blueprint $table) {
             // Remove the columns we added
             $table->dropForeign(['employee_id']);
+
+             // Remove the columns we added
             $table->dropColumn(['user_id', 'employee_id', 'username', 'role', 'last_login']);
+
+            $table->renameColumn('user_id', 'id');
             
             // Add back the original columns
             $table->id();

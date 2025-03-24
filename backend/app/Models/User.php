@@ -23,14 +23,14 @@ class User extends Authenticatable
      *
      * @var string
      */
-    protected $keyType = 'string';
+    protected $keyType = 'int';
 
     /**
      * Indicates if the IDs are auto-incrementing.
      *
      * @var bool
      */
-    public $incrementing = false;
+    public $incrementing = true;
 
     /**
      * The attributes that are mass assignable.
@@ -38,7 +38,7 @@ class User extends Authenticatable
      * @var list<string>
      */
     protected $fillable = [
-        'user_id',
+        'login_id',
         'employee_id',
         'username',
         'password',

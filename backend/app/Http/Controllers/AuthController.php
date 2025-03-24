@@ -31,7 +31,7 @@ class AuthController extends Controller
             
             // Log successful authentication
             Log::debug('Authentication successful for user:', [
-                'user_id' => $user->user_id,
+                'login_id' => $user->login_id,
                 'username' => $user->username,
                 'role' => $user->role,
             ]);
@@ -111,14 +111,14 @@ public function changePassword(Request $request)
             // Try session auth first
             if (Auth::check()) {
                 $user = Auth::user();
-                Log::debug('User found via session auth', ['user_id' => $user->id]);
+                Log::debug('User found via session auth', ['login_id' => $user->id]);
             } 
             // Then try token auth
             elseif ($request->bearerToken()) {
                 $token = PersonalAccessToken::findToken($request->bearerToken());
                 if ($token) {
                     $user = $token->tokenable;
-                    Log::debug('User found via token auth', ['user_id' => $user->id]);
+                    Log::debug('User found via token auth', ['login_id' => $user->id]);
                 }
             }
             
@@ -132,7 +132,7 @@ public function changePassword(Request $request)
             
             // Check if current password is correct
             if (!Hash::check($validated['current_password'], $user->password)) {
-                Log::warning('Invalid current password for user', ['user_id' => $user->id]);
+                Log::warning('Invalid current password for user', ['login_id' => $user->id]);
                 return response()->json([
                     'success' => false,
                     'message' => 'Current password is incorrect'
@@ -149,7 +149,7 @@ public function changePassword(Request $request)
             
             $user->save();
             
-            Log::info('Password changed successfully for user', ['user_id' => $user->id]);
+            Log::info('Password changed successfully for user', ['login_id' => $user->id]);
             
             // Generate a fresh token for the user if using token auth
             $token = null;

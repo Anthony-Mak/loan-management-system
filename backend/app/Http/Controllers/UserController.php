@@ -32,7 +32,7 @@ class UserController extends Controller
         ]);
         
         $user = User::create([
-            'user_id' => Str::uuid(),
+            'login_id' => Str::uuid(),
             'employee_id' => $request->employee_id,
             'username' => $request->username,
             'password' => Hash::make($request->password),
@@ -48,21 +48,21 @@ class UserController extends Controller
     /**
      * Display the specified user
      */
-    public function show($id)
+    public function show($login_id)
     {
-        $user = User::with('employee')->findOrFail($id);
+        $user = User::with('employee')->where('login_id', $login_id)->firstOrFail();
         return response()->json($user);
     }
 
     /**
      * Update the specified user
      */
-    public function update(Request $request, $id)
+    public function update(Request $request, $login_id)
     {
-        $user = User::findOrFail($id);
+        $user = User::where('login_id', $login_id)->firstOrFail();
         
         $request->validate([
-            'username' => 'sometimes|string|unique:users,username,' . $user->user_id . ',user_id',
+            'username' => 'sometimes|string|unique:users,username,' . $user->user_id,
             'role' => 'sometimes|in:admin,hr,employee',
         ]);
         
@@ -77,13 +77,13 @@ class UserController extends Controller
     /**
      * Reset user password
      */
-    public function resetPassword(Request $request, $id)
+    public function resetPassword(Request $request, $login_id)
     {
         $request->validate([
             'password' => 'required|string|min:8',
         ]);
         
-        $user = User::findOrFail($id);
+        $user = User::where('login_id', $login_id)->firstOrFail();
         $user->password = Hash::make($request->password);
         $user->save();
         
@@ -95,9 +95,9 @@ class UserController extends Controller
     /**
      * Remove the specified user
      */
-    public function destroy($id)
+    public function destroy($login_id)
     {
-        $user = User::findOrFail($id);
+        $user = User::where('login_id', $login_id)->firstOrFail();
         $user->delete();
         
         return response()->json([

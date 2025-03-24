@@ -64,11 +64,33 @@ Route::middleware([
         // Employee routes
         Route::middleware('role:employee')->prefix('employee')->group(function () {
             Route::get('/dashboard', [EmployeeController::class, 'getDashboardData']);
-            Route::get('/loans', [EmployeeController::class, 'getLoanApplications']);
+            Route::get('/loans', [EmployeeController::class, 'getLoans']);
             Route::get('/loans/{id}', [EmployeeController::class, 'getLoanDetails']);
             Route::post('/loans', [EmployeeController::class, 'submitLoanApplication']);
             Route::get('/profile', [EmployeeController::class, 'show']);
             Route::put('/profile', [EmployeeController::class, 'update']);
         });
     });
+    Route::get('/debug/schema', function () {
+        $tables = ['employees', 'banking_details', 'loan_applications', 'collaterals', 'loan_types'];
+        $schema = [];
+        
+        foreach ($tables as $table) {
+            $columns = DB::select("SHOW COLUMNS FROM {$table}");
+            $schema[$table] = $columns;
+            
+            Log::debug("Schema for table {$table}:", [
+                'columns' => collect($columns)->pluck('Field')->toArray(),
+                'column_count' => count($columns)
+            ]);
+        }
+        
+        return response()->json($schema);
+    })->middleware('auth');
+    Log::debug('PHP & environment information:', [
+        'php_version' => phpversion(),
+        'memory_limit' => ini_get('memory_limit'),
+        'max_execution_time' => ini_get('max_execution_time'),
+        'server_software' => $_SERVER['SERVER_SOFTWARE'] ?? 'unknown'
+    ]);
 });

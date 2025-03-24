@@ -6,6 +6,7 @@ use Illuminate\Database\Eloquent\Model;
 
 class BankingDetail extends Model
 {
+    protected $primaryKey = 'banking_id';
     protected $fillable = [
         'employee_id',
         'has_zwmb_account',
@@ -24,6 +25,6 @@ class BankingDetail extends Model
     
     public function employee()
     {
-        return $this->belongsTo(Employee::class);
+        return $this->belongsTo(Employee::class, 'employee_id', 'employee_id');
     }
 }
