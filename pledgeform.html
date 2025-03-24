@@ -92,6 +92,16 @@
     </style>
 </head>
 <body>
+
+    <nav class="navbar">
+        <div class="navbar-brand">Loan Management System</div>
+        <div class="user-info">
+            <div class="user-profile" id="user-initial">{{ strtoupper(substr(Auth::user()->username, 0, 1)) }}</div>
+            <span id="username-display">{{ Auth::user()->username }}</span>
+            <button onclick="handleLogout()" class="logout-btn">Logout</button>
+        </div>
+    </nav>
+
     <h1>Pledge Agreement</h1>
 
     <p>

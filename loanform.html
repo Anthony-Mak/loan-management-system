@@ -7,6 +7,74 @@
     <style>
         body {
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    line-height: 1.6;
+    margin: 20px;
+    background-color: #f4f4f4;
+}
+
+.navbar {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    background-color: #007bff;
+    color: white;
+    padding: 10px 20px;
+    border-radius: 5px;
+}
+
+.navbar-brand {
+    font-size: 1.5em;
+    font-weight: bold;
+}
+
+.user-info {
+    display: flex;
+    align-items: center;
+}
+
+.user-profile {
+    width: 30px;
+    height: 30px;
+    border-radius: 50%;
+    background-color: #ffffff;
+    color: #007bff;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    font-weight: bold;
+    margin-right: 10px;
+}
+
+#username-display {
+    margin-right: 10px;
+}
+
+.logout-btn {
+    background-color: #dc3545;
+    color: white;
+    padding: 5px 10px;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+    transition: background-color 0.3s ease;
+}
+
+.logout-btn:hover {
+    background-color: #c82333;
+}
+
+/* Existing CSS */
+.container {
+    width: 90%;
+    max-width: 800px;
+    margin: auto;
+    overflow: hidden;
+    padding: 20px;
+    background-color: white;
+    border-radius: 8px;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+            
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
             line-height: 1.6;
             margin: 20px;
             background-color: #f4f4f4;
@@ -98,291 +166,829 @@
         button:hover {
             background-color: #0056b3;
         }
-        h2{
+        h2 {
             color: #333;
             margin-bottom: 1em;
+        }
+        /* Step progress bar styles */
+        .step-progress {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 30px;
+            position: relative;
+        }
+        .step-progress::before {
+            content: "";
+            position: absolute;
+            top: 15px;
+            left: 0;
+            right: 0;
+            height: 3px;
+            background-color: #ddd;
+            z-index: 1;
+        }
+        .step-progress-bar {
+            position: absolute;
+            top: 15px;
+            left: 0;
+            height: 3px;
+            background-color: #007bff;
+            z-index: 2;
+            transition: width 0.3s ease;
+        }
+        .step-item {
+            z-index: 3;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            position: relative;
+        }
+        .step-number {
+            width: 30px;
+            height: 30px;
+            border-radius: 50%;
+            background-color: #ddd;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-weight: bold;
+            color: #333;
+            margin-bottom: 5px;
+        }
+        .step-item.active .step-number {
+            background-color: #007bff;
+            color: white;
+        }
+        .step-item.completed .step-number {
+            background-color: #28a745;
+            color: white;
+        }
+        .step-label {
+            font-size: 12px;
+            text-align: center;
+        }
+        .form-step {
+            display: none;
+        }
+        .form-step.active {
+            display: block;
+        }
+        .form-navigation {
+            display: flex;
+            justify-content: space-between;
+            margin-top: 20px;
+        }
+        .required-field::after {
+            content: "*";
+            color: red;
+            margin-left: 5px;
+        }
+        .form-info {
+            background-color: #e7f3ff;
+            padding: 15px;
+            border-radius: 5px;
+            margin-bottom: 20px;
+            border-left: 5px solid #007bff;
+        }
+        .form-step-title {
+            border-bottom: 2px solid #007bff;
+            padding-bottom: 10px;
+            margin-bottom: 20px;
+        }
+        .hint {
+            font-size: 12px;
+            color: #666;
+            margin-top: -15px;
+            margin-bottom: 10px;
+        }
+        .percentage-complete {
+            text-align: right;
+            font-size: 14px;
+            color: #007bff;
+            margin-bottom: 10px;
         }
         @media (max-width: 600px) {
             .container {
                 padding: 10px;
                 width: 95%;
             }
+            .step-label {
+                display: none;
+            }
         }
-
-        
-        
     </style>
 </head>
 <body>
+    <nav class="navbar">
+        <div class="navbar-brand">Loan Management System</div>
+        <div class="user-info">
+            <div class="user-profile" id="user-initial">{{ strtoupper(substr(Auth::user()->username, 0, 1)) }}</div>
+            <span id="username-display">{{ Auth::user()->username }}</span>
+            <button onclick="handleLogout()" class="logout-btn">Logout</button>
+        </div>
+    </nav>
+
     <div class="container">
-       <form><h2>STAFF LOAN APPLICATION FORM</h2>
+        <h2>STAFF LOAN APPLICATION FORM</h2>
 
-        <h3>Applicant's Information</h3>
-        <table>
-            <tr>
-                <td>Title (Prof/Dr/Mr/Mrs/Ms)</td>
-                <td>
-                    <select>
-                        <option value="Prof">Prof</option>
-                        <option value="Dr">Dr</option>
-                        <option value="Mr">Mr</option>
-                        <option value="Mrs">Mrs</option>
-                        <option value="Ms">Ms</option>
-                        <option value="">(Select a title)</option>
-                    </select>
-                </td>
-            </tr>
-            <tr>
-                <td>Name in Full</td>
-                <td><input type="text"></td>
-            </tr>
-            <tr>
-                <td>ID/Passport/Driver’s License No.</td>
-                <td><input type="text"></td>
-            </tr>
-            <tr>
-                <td>Date of Birth</td>
-                <td><input type="date"></td>
-            </tr>
-            <tr>
-                <td>Gender</td>
-                <td><input type="text"></td>
-            </tr>
-            <tr>
-                <td>Marital Status</td>
-                <td>
-                    <select>
-                        <option value="">Select</option>
-                        <option value="married">Married</option>
-                        <option value="single">Single</option>
-                        <option value="divorced">Divorced</option>
-                        <option value="widowed">Widowed</option>
-                    </select>
-                </td>
-            </tr>
-            <tr>
-                <td>Number of Dependents</td>
-                <td><input type="number"></td>
-            </tr>
-            <tr>
-                <td>Physical Home Address</td>
-                <td><input type="text"></td>
-            </tr>
-            <tr>
-                <td>Length of Stay-at-Home Address</td>
-                <td>
-                    <input type="text" placeholder="Years and Months (e.g., 2 years, 6 months)">
-                </td>
-            </tr>
-            <tr>
-                <td>Accommodation Type</td>
-                <td>
-                    <select>
-                        <option value="">Select</option>
-                        <option value="owned">Owned</option>
-                        <option value="rented">Rented</option>
-                        <option value="employer">Employer Provided</option>
-                        <option value="parents">Staying with Parents</option>
-                    </select>
-                </td>
-            </tr>
-            <tr>
-                <td>Postal Address (different from above)</td>
-                <td><input type="text"></td>
-            </tr>
-            <tr>
-                <td>Telephone Numbers</td>
-                <td>Tel: <input type="tel"> Cell: <input type="tel"></td>
-            </tr>
-            <tr>
-                <td>Email</td>
-                <td><input type="email"></td>
-            </tr>
-            <tr>
-                <td>Next of Kin</td>
-                <td><input type="text"></td>
-            </tr>
-            <tr>
-                <td>Next of Kin Address</td>
-                <td><input type="text"></td>
-            </tr>
-            <tr>
-                <td>Next of Kin Telephone Numbers</td>
-                <td>Tel: <input type="tel"> Cell: <input type="tel"></td>
-            </tr>
-        </table>
+        <div class="percentage-complete">
+            <span id="percentage">0%</span> complete
+        </div>
 
-        <h3>Employment /Business Details (Applicant)</h3>
-        <table>
-            <tr>
-                <td>Period with Employer</td>
-                <td><input type="text"></td>
-            </tr>
-            <tr>
-                <td>Designation</td>
-                <td>Post: <input type="text"> Department: <input type="text"></td>
-            </tr>
-            <tr>
-                <td>Monthly Salary</td>
-                <td>Gross($): <input type="number"> Net($): <input type="number"></td>
-            </tr>
-        </table>
+        <div class="step-progress">
+            <div class="step-progress-bar" id="progress-bar"></div>
+            <div class="step-item active" data-step="1">
+                <div class="step-number">1</div>
+                <div class="step-label">Personal Details</div>
+            </div>
+            <div class="step-item" data-step="2">
+                <div class="step-number">2</div>
+                <div class="step-label">Employment Info</div>
+            </div>
+            <div class="step-item" data-step="3">
+                <div class="step-number">3</div>
+                <div class="step-label">Banking Details</div>
+            </div>
+            <div class="step-item" data-step="4">
+                <div class="step-number">4</div>
+                <div class="step-label">Loan Request</div>
+            </div>
+            <div class="step-item" data-step="5">
+                <div class="step-number">5</div>
+                <div class="step-label">Collateral</div>
+            </div>
+            <div class="step-item" data-step="6">
+                <div class="step-number">6</div>
+                <div class="step-label">Review & Submit</div>
+            </div>
+        </div>
 
-        <h3>APPLICANT'S BANKING DETAILS</h3>
-        <table>
-            <tr>
-                <td>Any Account with ZWMB Bank?</td>
-                <td>
-                    <label><input type="radio" name="zwmb_account" value="yes" onclick="toggleYearsInput('show')"> Yes</label>
-                    <label><input type="radio" name="zwmb_account" value="no" onclick="toggleYearsInput('hide')"> No</label>
-                    <br>
-                    <span id="years_input_container" style="display: none;">
-                        If Yes number of years with ZWMB: <input type="number" id="years_input">
-                    </span>
-                </td>
-            </tr>
-            
-            <script>
-            function toggleYearsInput(action) {
-                var container = document.getElementById('years_input_container');
-                if (action === 'show') {
-                    container.style.display = 'inline';
-                } else {
-                    container.style.display = 'none';
-                }
-            }
-            </script>
-            <tr>
-                <td>Branch</td>
-                <td><input type="text"></td>
-            </tr>
-            <tr>
-                <td>Account Number</td>
-                <td><input type="text"></td>
-            </tr>
-            <tr>
-                <td>Have you previously taken any loan with ZWMB</td>
-                <td>
-                    <label><input type="radio" name="zwmb_loan" value="yes" onclick="toggleLoanAmount('show')"> Yes</label>
-                    <label><input type="radio" name="zwmb_loan" value="no" onclick="toggleLoanAmount('hide')"> No</label>
-                    <br>
-                    <span id="loan_amount_container" style="display: none;">
-                        If Yes Loan Amount ($): <input type="number" id="loan_amount_input">
-                    </span>
-                    
-                </td>
-            </tr>
-            
-            <script>
-            function toggleLoanAmount(action) {
-                var container = document.getElementById('loan_amount_container');
-                if (action === 'show') {
-                    container.style.display = 'inline';
-                } else {
-                    container.style.display = 'none';
-                }
-            }
-            </script>
-          
-            <tr>
-                <td>Current balance</td>
-                <td><input type="number"></td>
-            </tr>
-            <tr>
-                <td>taken on</td>
-                <td><input type="date"></td>
-            </tr>
-            <tr>
-                <td>Maturity Date</td>
-                <td><input type="date"></td>
-            </tr>
-            <tr>
-                <td>0r currently being repaid at ($) per month</td>
-                <td><input type="number"></td>
-            </tr>
-        </table>
-        <h3>My other banking details</h3>
-        <table>
-            <tr>
-                <td>Bank & Branch</td>
-                <td><input type="text"></td>
-            </tr>
-            <tr>
-                <td>Type of Account (s)</td>
-                <td><input type></td>
+        <form id="loanApplicationForm">
+            <!-- Step 1: Personal Information -->
+            <div class="form-step active" id="step-1">
+                <h3 class="form-step-title">Step 1: Applicant's Personal Information</h3>
+                <div class="form-info">
+                    <p>Please provide your personal details. Fields marked with an asterisk (*) are required.</p>
+                </div>
+
+                <table>
+                    <tr>
+                        <td class="required-field">Title</td>
+                        <td>
+                            <select name="title" required>
+                                <option value="">(Select a title)</option>
+                                <option value="Prof">Prof</option>
+                                <option value="Dr">Dr</option>
+                                <option value="Mr">Mr</option>
+                                <option value="Mrs">Mrs</option>
+                                <option value="Ms">Ms</option>
+                            </select>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td class="required-field">Name in Full</td>
+                        <td><input type="text" name="fullName" required></td>
+                    </tr>
+                    <tr>
+                        <td class="required-field">ID/Passport/Driver's License No.</td>
+                        <td><input type="text" name="idNumber" required></td>
+                    </tr>
+                    <tr>
+                        <td class="required-field">Date of Birth</td>
+                        <td><input type="date" name="dateOfBirth" required></td>
+                    </tr>
+                    <tr>
+                        <td class="required-field">Gender</td>
+                        <td>
+                            <select name="gender" required>
+                                <option value="">(Select gender)</option>
+                                <option value="Male">Male</option>
+                                <option value="Female">Female</option>
+                                <option value="Other">Other</option>
+                            </select>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td class="required-field">Marital Status</td>
+                        <td>
+                            <select name="maritalStatus" required>
+                                <option value="">Select</option>
+                                <option value="married">Married</option>
+                                <option value="single">Single</option>
+                                <option value="divorced">Divorced</option>
+                                <option value="widowed">Widowed</option>
+                            </select>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td>Number of Dependents</td>
+                        <td><input type="number" name="dependents" min="0"></td>
+                    </tr>
+                    <tr>
+                        <td class="required-field">Physical Home Address</td>
+                        <td><input type="text" name="homeAddress" required></td>
+                    </tr>
+                    <tr>
+                        <td>Length of Stay at Home Address</td>
+                        <td>
+                            <input type="text" name="lengthOfStay" placeholder="Years and Months (e.g., 2 years, 6 months)">
+                        </td>
+                    </tr>
+                    <tr>
+                        <td class="required-field">Accommodation Type</td>
+                        <td>
+                            <select name="accommodationType" required>
+                                <option value="">Select</option>
+                                <option value="owned">Owned</option>
+                                <option value="rented">Rented</option>
+                                <option value="employer">Employer Provided</option>
+                                <option value="parents">Staying with Parents</option>
+                            </select>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td>Postal Address (if different from above)</td>
+                        <td><input type="text" name="postalAddress"></td>
+                    </tr>
+                    <tr>
+                        <td class="required-field">Telephone Numbers</td>
+                        <td>Tel: <input type="tel" name="telephone"> Cell: <input type="tel" name="cellphone" required></td>
+                    </tr>
+                    <tr>
+                        <td class="required-field">Email</td>
+                        <td><input type="email" name="email" required></td>
+                    </tr>
+                    <tr>
+                        <td class="required-field">Next of Kin</td>
+                        <td><input type="text" name="nextOfKin" required></td>
+                    </tr>
+                    <tr>
+                        <td class="required-field">Next of Kin Address</td>
+                        <td><input type="text" name="nextOfKinAddress" required></td>
+                    </tr>
+                    <tr>
+                        <td class="required-field">Next of Kin Telephone Numbers</td>
+                        <td>Tel: <input type="tel" name="nextOfKinTelephone"> Cell: <input type="tel" name="nextOfKinCell" required></td>
+                    </tr>
+                </table>
+
+                <div class="form-navigation">
+                    <button type="button" disabled style="visibility: hidden;">Previous</button>
+                    <button type="button" onclick="nextStep(1)">Next</button>
+                </div>
+            </div>
+
+            <!-- Step 2: Employment Details -->
+            <div class="form-step" id="step-2">
+                <h3 class="form-step-title">Step 2: Employment/Business Details</h3>
+                <div class="form-info">
+                    <p>Please provide information about your current employment or business.</p>
+                </div>
+
+                <table>
+                    <tr>
+                        <td class="required-field">Period with Employer</td>
+                        <td><input type="text" name="employmentPeriod" required placeholder="e.g., 5 years, 3 months"></td>
+                    </tr>
+                    <tr>
+                        <td class="required-field">Designation</td>
+                        <td>Post: <input type="text" name="post" required> Department: <input type="text" name="department" required></td>
+                    </tr>
+                    <tr>
+                        <td class="required-field">Monthly Salary</td>
+                        <td>Gross($): <input type="number" name="grossSalary" required> Net($): <input type="number" name="netSalary" required></td>
+                    </tr>
+                </table>
+
+                <div class="form-navigation">
+                    <button type="button" onclick="prevStep(2)">Previous</button>
+                    <button type="button" onclick="nextStep(2)">Next</button>
+                </div>
+            </div>
+
+            <!-- Step 3: Banking Details -->
+            <div class="form-step" id="step-3">
+                <h3 class="form-step-title">Step 3: Banking Details</h3>
+                <div class="form-info">
+                    <p>Please provide your banking information and history with ZWMB Bank.</p>
+                </div>
+
+                <h4>APPLICANT'S BANKING DETAILS</h4>
+                <table>
+                    <tr>
+                        <td class="required-field">Any Account with ZWMB Bank?</td>
+                        <td>
+                            <label><input type="radio" name="zwmbAccount" value="yes" onclick="toggleYearsInput('show')" required> Yes</label>
+                            <label><input type="radio" name="zwmbAccount" value="no" onclick="toggleYearsInput('hide')" required> No</label>
+                            <br>
+                            <span id="years_input_container" style="display: none;">
+                                If Yes, number of years with ZWMB: <input type="number" id="years_input" name="yearsWithZWMB">
+                            </span>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td>Branch</td>
+                        <td><input type="text" name="branch"></td>
+                    </tr>
+                    <tr>
+                        <td>Account Number</td>
+                        <td><input type="text" name="accountNumber"></td>
+                    </tr>
+                    <tr>
+                        <td class="required-field">Have you previously taken any loan with ZWMB</td>
+                        <td>
+                            <label><input type="radio" name="zwmbLoan" value="yes" onclick="toggleLoanAmount('show')" required> Yes</label>
+                            <label><input type="radio" name="zwmbLoan" value="no" onclick="toggleLoanAmount('hide')" required> No</label>
+                            <br>
+                            <span id="loan_amount_container" style="display: none;">
+                                If Yes, Loan Amount ($): <input type="number" id="loan_amount_input" name="previousLoanAmount">
+                            </span>
+                        </td>
+                    </tr>
+                    <tr class="previous-loan-field" style="display: none;">
+                        <td>Current balance</td>
+                        <td><input type="number" name="currentBalance"></td>
+                    </tr>
+                    <tr class="previous-loan-field" style="display: none;">
+                        <td>Taken on</td>
+                        <td><input type="date" name="loanStartDate"></td>
+                    </tr>
+                    <tr class="previous-loan-field" style="display: none;">
+                        <td>Maturity Date</td>
+                        <td><input type="date" name="maturityDate"></td>
+                    </tr>
+                    <tr class="previous-loan-field" style="display: none;">
+                        <td>Currently being repaid at ($) per month</td>
+                        <td><input type="number" name="monthlyRepayment"></td>
+                    </tr>
+                </table>
+
+                <h4>My other banking details</h4>
+                <table>
+                    <tr>
+                        <td>Bank & Branch</td>
+                        <td><input type="text" name="otherBank"></td>
+                    </tr>
+                    <tr>
+                        <td>Type of Account(s)</td>
+                        <td><input type="text" name="accountType"></td>
+                    </tr>
+                </table>
+
+                <div class="form-navigation">
+                    <button type="button" onclick="prevStep(3)">Previous</button>
+                    <button type="button" onclick="nextStep(3)">Next</button>
+                </div>
+            </div>
+
+            <!-- Step 4: Loan Request -->
+            <div class="form-step" id="step-4">
+                <h3 class="form-step-title">Step 4: Loan Request</h3>
+                <div class="form-info">
+                    <p>Please specify the loan amount and purpose you are applying for.</p>
+                </div>
+
+                <table>
+                    <tr>
+                        <th class="required-field">Loan Requested ($)</th>
+                        <td>
+                            <input type="number" id="loanAmountFigures" name="loanAmountFigures" placeholder="In figures" required>
+                            <div class="hint">Enter the loan amount in numbers</div>
+                            <input type="text" id="loanAmountWords" name="loanAmountWords" placeholder="In words" required>
+                            <div class="hint">Enter the loan amount in words (e.g., Ten Thousand Dollars)</div>
+                        </td>
+                    </tr>
+                    <tr>
+                        <th class="required-field">Loan Period</th>
+                        <td>
+                            Year(s): <input type="number" id="loanYears" name="loanYears" min="0" max="30">
+                            Month(s): <input type="number" id="loanMonths" name="loanMonths" min="0" max="11">
+                            <div class="hint">The loan period must be at least 1 month and not exceed 30 years</div>
+                        </td>
+                    </tr>
+                    <tr>
+                        <th class="required-field">Brief Purpose of Loan:</th>
+                        <td><textarea id="briefPurpose" name="briefPurpose" required></textarea></td>
+                    </tr>
+                    <tr>
+                        <th class="required-field">Specific Loan Purpose</th>
+                        <td>
+                            <select name="loanPurpose" required>
+                                <option value="">Select Loan Purpose</option>
+                                <option value="Personal Loan">Personal Loan</option>
+                                <option value="Home Improvement Loan">Home Improvement Loan</option>
+                                <option value="Car Loan">Car Loan</option>
+                                <option value="Educational Loan">Educational Loan</option>
+                                <option value="Other">Other</option>
+                            </select><br>
+                            <div id="otherLoanType" style="display: none;">
+                                <label>If Other, state Type of Loan Required: <input type="text" name="otherLoanType"></label>
+                            </div>
+                        </td>
+                    </tr>
+                </table>
+
+                <div class="form-navigation">
+                    <button type="button" onclick="prevStep(4)">Previous</button>
+                    <button type="button" onclick="nextStep(4)">Next</button>
+                </div>
+            </div>
+
+            <!-- Step 5: Collateral Security -->
+            <div class="form-step" id="step-5">
+                <h3 class="form-step-title">Step 5: Collateral Security</h3>
+                <div class="form-info">
+                    <p>Please provide details of any collateral security you are offering for this loan.</p>
+                </div>
+
+                <table>
+                    <tr>
+                        <th>SECURITY TYPE</th>
+                        <th>DESCRIPTION</th>
+                        <th>Value ($)</th>
+                    </tr>
+                    <tr>
+                        <td><input type="text" name="securityType1" placeholder="e.g., Vehicle, Property"></td>
+                        <td><input type="text" name="securityDescription1" placeholder="e.g., 2020 Toyota Camry"></td>
+                        <td><input type="number" name="securityValue1" placeholder="Estimated value"></td>
+                    </tr>
+                    <tr>
+                        <td><input type="text" name="securityType2"></td>
+                        <td><input type="text" name="securityDescription2"></td>
+                        <td><input type="number" name="securityValue2"></td>
+                    </tr>
+                    <tr>
+                        <td><input type="text" name="securityType3"></td>
+                        <td><input type="text" name="securityDescription3"></td>
+                        <td><input type="number" name="securityValue3"></td>
+                    </tr>
+                </table>
+
+                <div class="form-navigation">
+                    <button type="button" onclick="prevStep(5)">Previous</button>
+                    <button type="button" onclick="nextStep(5)">Next</button>
+                </div>
+            </div>
+
+            <!-- Step 6: Review and Submit -->
+            <div class="form-step" id="step-6">
+                <h3 class="form-step-title">Step 6: Review and Submit</h3>
+                <div class="form-info">
+                    <p>Please review all the information you've provided before submitting your application.</p>
+                </div>
+
+                <div id="review-summary">
+                    <!-- This will be populated with a summary of the form data -->
+                </div>
+
+                <h4>DECLARATION BY APPLICANT</h4>
+                <p>I hereby declare that the information provided is true and accurate. I understand that providing false information may lead to rejection of my application and/or legal consequences.</p>
                 
-            </tr>
-        </table>
+                <div class="form-field">
+                    <label>
+                        <input type="checkbox" name="agreeTerms" required> I agree to the terms and conditions of the loan application
+                    </label>
+                </div>
+
+                <div class="form-navigation">
+                    <button type="button" onclick="prevStep(6)">Previous</button>
+                    <button type="button" onclick="window.location.href='staffloanpolicy.html'">Submit Application</button>
+                </div>
+            </div>
+        </form>
+    </div>
+
+    <script>
+        // Current step
+        let currentStep = 1;
+        const totalSteps = 6;
+
+        // Function to show a specific step
+        function showStep(step) {
+            // Hide all steps
+            document.querySelectorAll('.form-step').forEach(el => {
+                el.classList.remove('active');
+            });
+            
+            // Show the specified step
+            document.getElementById('step-' + step).classList.add('active');
+            
+            // Update progress bar
+            updateProgress(step);
+            
+            // Update step indicators
+            updateStepIndicators(step);
+        }
+
+        // Function to move to the next step
+        function nextStep(step) {
+            if (validateStep(step)) {
+                currentStep = step + 1;
+                showStep(currentStep);
+                
+                // If we're on the last step, populate the review summary
+                if (currentStep === totalSteps) {
+                    populateReviewSummary();
+                }
+            }
+        }
+
+        // Function to move to the previous step
+        function prevStep(step) {
+            currentStep = step - 1;
+            showStep(currentStep);
+        }
+
+        // Update progress bar
+        function updateProgress(step) {
+            const progressPercentage = ((step - 1) / (totalSteps - 1)) * 100;
+            document.getElementById('progress-bar').style.width = progressPercentage + '%';
+            document.getElementById('percentage').textContent = Math.round(progressPercentage) + '%';
+        }
+
+        // Update step indicators
+        function updateStepIndicators(currentStep) {
+            document.querySelectorAll('.step-item').forEach(item => {
+                const step = parseInt(item.getAttribute('data-step'));
+                item.classList.remove('active', 'completed');
+                
+                if (step === currentStep) {
+                    item.classList.add('active');
+                } else if (step < currentStep) {
+                    item.classList.add('completed');
+                }
+            });
+        }
+
+        // Validate each step
+        function validateStep(step) {
+            // Get all required fields in the current step
+            const stepElement = document.getElementById('step-' + step);
+            const requiredFields = stepElement.querySelectorAll('[required]');
+            
+            // Check if all required fields are filled
+            let isValid = true;
+            requiredFields.forEach(field => {
+                if (!field.value) {
+                    isValid = false;
+                    field.style.borderColor = 'red';
+                } else {
+                    field.style.borderColor = '#ccc';
+                }
+            });
+            
+            // Validate specific fields if needed
+            if (step === 4) {
+                // Validate loan period
+                const years = parseInt(document.getElementById('loanYears').value) || 0;
+                const months = parseInt(document.getElementById('loanMonths').value) || 0;
+                
+                if (years === 0 && months === 0) {
+                    isValid = false;
+                    document.getElementById('loanYears').style.borderColor = 'red';
+                    document.getElementById('loanMonths').style.borderColor = 'red';
+                    alert('Please specify a loan period');
+                }
+            }
+            
+            if (!isValid) {
+                alert('Please fill in all required fields');
+            }
+            
+            return isValid;
+        }
+
+        // Show/hide additional fields based on ZWMB account selection
+        function toggleYearsInput(action) {
+            var container = document.getElementById('years_input_container');
+            if (action === 'show') {
+                container.style.display = 'inline';
+            } else {
+                container.style.display = 'none';
+                document.getElementById('years_input').value = '';
+            }
+        }
+
+        // Show/hide additional fields based on previous loan selection
+        function toggleLoanAmount(action) {
+            var container = document.getElementById('loan_amount_container');
+            var previousLoanFields = document.querySelectorAll('.previous-loan-field');
+            
+            if (action === 'show') {
+                container.style.display = 'inline';
+                previousLoanFields.forEach(field => {
+                    field.style.display = 'table-row';
+                });
+            } else {
+                container.style.display = 'none';
+                document.getElementById('loan_amount_input').value = '';
+                previousLoanFields.forEach(field => {
+                    field.style.display = 'none';
+                });
+            }
+        }
+
+        // Show/hide "Other" loan type field
+        document.querySelector('select[name="loanPurpose"]').addEventListener('change', function() {
+            if (this.value === 'Other') {
+                document.getElementById('otherLoanType').style.display = 'block';
+            } else {
+                document.getElementById('otherLoanType').style.display = 'none';
+            }
+        });
+
+        // Populate review summary
+        function populateReviewSummary() {
+            const form = document.getElementById('loanApplicationForm');
+            const formData = new FormData(form);
+            let summaryHTML = '<h4>Personal Information</h4>';
+            
+            // Personal Information
+            summaryHTML += `<p><strong>Name:</strong> ${formData.get('title')} ${formData.get('fullName')}</p>`;
+            summaryHTML += `<p><strong>ID/Passport:</strong> ${formData.get('idNumber')}</p>`;
+            summaryHTML += `<p><strong>Date of Birth:</strong> ${formData.get('dateOfBirth')}</p>`;
+            summaryHTML += `<p><strong>Contact:</strong> ${formData.get('email')} / ${formData.get('cellphone')}</p>`;
+            
+            // Employment Details
+            summaryHTML += '<h4>Employment Details</h4>';
+            summaryHTML += `<p><strong>Position:</strong> ${formData.get('post')}, ${formData.get('department')}</p>`;
+            summaryHTML += `<p><strong>Employment Period:</strong> ${formData.get('employmentPeriod')}</p>`;
+            summaryHTML += `<p><strong>Salary:</strong> $${formData.get('grossSalary')} (Gross), $${formData.get('netSalary')} (Net)</p>`;
+            
+           // Loan Request
+    summaryHTML += '<h4>Loan Request</h4>';
+    summaryHTML += `<p><strong>Loan Amount:</strong> $${formData.get('loanAmountFigures')} (${formData.get('loanAmountWords')})</p>`;
+    const years = parseInt(formData.get('loanYears')) || 0;
+    const months = parseInt(formData.get('loanMonths')) || 0;
+    summaryHTML += `<p><strong>Loan Period:</strong> ${years} year(s), ${months} month(s)</p>`;
+    summaryHTML += `<p><strong>Purpose:</strong> ${formData.get('briefPurpose')}</p>`;
+    
+    // Banking Details
+    summaryHTML += '<h4>Banking Details</h4>';
+    const hasZwmbAccount = formData.get('zwmbAccount') === 'yes';
+    summaryHTML += `<p><strong>ZWMB Account:</strong> ${hasZwmbAccount ? 'Yes' : 'No'}`;
+    if (hasZwmbAccount) {
+        summaryHTML += `, ${formData.get('yearsWithZWMB')} years with ZWMB`;
+    }
+    summaryHTML += `</p>`;
+    
+    if (formData.get('branch')) {
+        summaryHTML += `<p><strong>Branch:</strong> ${formData.get('branch')}</p>`;
+    }
+    
+    if (formData.get('accountNumber')) {
+        summaryHTML += `<p><strong>Account Number:</strong> ${formData.get('accountNumber')}</p>`;
+    }
+    
+    const hasPreviousLoan = formData.get('zwmbLoan') === 'yes';
+    summaryHTML += `<p><strong>Previous ZWMB Loan:</strong> ${hasPreviousLoan ? 'Yes' : 'No'}`;
+    if (hasPreviousLoan) {
+        summaryHTML += `, Amount: $${formData.get('previousLoanAmount')}`;
+        summaryHTML += `, Current Balance: $${formData.get('currentBalance')}`;
+        summaryHTML += `, Monthly Repayment: $${formData.get('monthlyRepayment')}`;
+    }
+    summaryHTML += `</p>`;
+    
+    // Collateral Security
+    summaryHTML += '<h4>Collateral Security</h4>';
+    let hasCollateral = false;
+    
+    for (let i = 1; i <= 3; i++) {
+        const securityType = formData.get(`securityType${i}`);
+        const securityDesc = formData.get(`securityDescription${i}`);
+        const securityValue = formData.get(`securityValue${i}`);
         
+        if (securityType && securityDesc && securityValue) {
+            hasCollateral = true;
+            summaryHTML += `<p><strong>${securityType}:</strong> ${securityDesc} - $${securityValue}</p>`;
+        }
+    }
+    
+    if (!hasCollateral) {
+        summaryHTML += '<p>No collateral security provided.</p>';
+    }
+    
+    // Update the review summary section
+    document.getElementById('review-summary').innerHTML = summaryHTML;
+}
 
-<h2>APPLICANT'S LOAN REQUEST</h2>
+// Function to handle form submission
+document.getElementById('loanApplicationForm').addEventListener('submit', function(e) {
+    e.preventDefault();
+    
+    // Final validation
+    if (!validateStep(totalSteps)) {
+        return false;
+    }
+    
+    // Get form data
+    const formData = new FormData(this);
+    
+    // Here you would typically send the data to your server
+    // Using fetch or another method
+    
+    // For demo purposes, show success message
+    alert('Your loan application has been submitted successfully! Your application will be reviewed and you will be contacted soon.');
+    
+    // You could redirect the user or show a success message
+    // window.location.href = 'confirmation.html';
+});
 
-      <table>
-        <tr>
-          <th>Loan Requested ($)</th>
-          <td>
-            <input type="number" id="loanAmountFigures" name="loanAmountFigures" placeholder="In figures">
-            <input type="text" id="loanAmountWords" name="loanAmountWords" placeholder="In words">
-          </td>
-        </tr>
-        <tr>
-          <th>Loan Period</th>
-          <td>
-            Year(s): <input type="number" id="loanYears" name="loanYears">
-            Month(s): <input type="number" id="loanMonths" name="loanMonths">
-          </td>
-        </tr>
-        <tr>
-          <th>Brief Purpose of Loan:</th>
-          <td><textarea id="briefPurpose" name="briefPurpose"></textarea></td>
-        </tr>
-        <tr>
-          <th>Specific Loan Purpose</th>
-          <td>
-            <select name="loanPurpose">
-              <option value="">Select Loan Purpose</option>
-              <option value="Personal Loan">Personal Loan</option>
-              <option value="Home Improvement Loan">Home Improvement Loan</option>
-              <option value="Car Loan">Car Loan</option>
-              <option value="Educational Loan">Educational Loan</option>
-              <option value="Other">Other</option>
-            </select><br>
-            <label>If Other, state Type of Loan Required: <input type="text" name="otherLoanType"></label>
-          </td>
-        </tr>
-      </table>
-    
-      <h2>APPLICANT'S COLLATERAL SECURITY</h2>
-    
-      <table>
-        <tr>
-          <th>SECURITY TYPE</th>
-          <th>DESCRIPTION</th>
-          <th>Value ($)</th>
-        </tr>
-        <tr>
-          <td><input type="text" name="securityType1"></td>
-          <td><input type="text" name="securityDescription1"></td>
-          <td><input type="number" name="securityValue1"></td>
-        </tr>
-          <tr>
-          <td><input type="text" name="securityType2"></td>
-          <td><input type="text" name="securityDescription2"></td>
-          <td><input type="number" name="securityValue2"></td>
-        </tr>
-          <tr>
-          <td><input type="text" name="securityType3"></td>
-          <td><input type="text" name="securityDescription3"></td>
-          <td><input type="number" name="securityValue3"></td>
-        </tr>
-      </table>
-    
-      <h2>DECLARATION BY APPLICANT</h2>
-      <p>I hereby declare that the information provided is true and accurate.</p>
-    
-    <button onclick="location.href='staffloanpolicy.html'">Next</button
-   >
+// Initialize numeric input validation for monetary fields
+document.querySelectorAll('input[type="number"]').forEach(function(input) {
+    input.addEventListener('input', function() {
+        if (this.value < 0) {
+            this.value = 0;
+        }
+    });
+});
 
-    </form>
-    <script src="script.js"></script>
-    </body>
+// Handle the loan purpose change
+document.querySelector('select[name="loanPurpose"]').addEventListener('change', function() {
+    const otherField = document.getElementById('otherLoanType');
+    if (this.value === 'Other') {
+        otherField.style.display = 'block';
+    } else {
+        otherField.style.display = 'none';
+    }
+});
+
+// Function to convert numbers to words for loan amount
+document.getElementById('loanAmountFigures').addEventListener('change', function() {
+    const amount = parseFloat(this.value);
+    if (!isNaN(amount)) {
+        document.getElementById('loanAmountWords').value = numberToWords(amount);
+    }
+});
+
+// Simple number to words converter for demo (simplified version)
+function numberToWords(num) {
+    const ones = ['', 'One', 'Two', 'Three', 'Four', 'Five', 'Six', 'Seven', 'Eight', 'Nine',
+                'Ten', 'Eleven', 'Twelve', 'Thirteen', 'Fourteen', 'Fifteen', 'Sixteen',
+                'Seventeen', 'Eighteen', 'Nineteen'];
+    const tens = ['', '', 'Twenty', 'Thirty', 'Forty', 'Fifty', 'Sixty', 'Seventy', 'Eighty', 'Ninety'];
+    const scales = ['', 'Thousand', 'Million', 'Billion', 'Trillion'];
+    
+    if (num === 0) return 'Zero Dollars';
+    
+    // Handle decimal part
+    const decimalPart = Math.round((num % 1) * 100);
+    const dollarPart = Math.floor(num);
+    
+    let result = '';
+    
+    // Convert dollar part
+    if (dollarPart > 0) {
+        // Simplified for demo - a complete implementation would handle all numbers correctly
+        if (dollarPart < 20) {
+            result = ones[dollarPart];
+        } else if (dollarPart < 100) {
+            result = tens[Math.floor(dollarPart / 10)] + (dollarPart % 10 !== 0 ? '-' + ones[dollarPart % 10] : '');
+        } else {
+            result = 'Amount too large for this demo converter';
+        }
+        
+        result += ' Dollar' + (dollarPart === 1 ? '' : 's');
+    }
+    
+    // Add cents part
+    if (decimalPart > 0) {
+        if (result !== '') {
+            result += ' and ';
+        }
+        
+        if (decimalPart < 20) {
+            result += ones[decimalPart];
+        } else {
+            result += tens[Math.floor(decimalPart / 10)] + (decimalPart % 10 !== 0 ? '-' + ones[decimalPart % 10] : '');
+        }
+        
+        result += ' Cent' + (decimalPart === 1 ? '' : 's');
+    }
+    
+    return result;
+}
+
+// Function to handle user logout
+function handleLogout() {
+    // Clear any stored user data
+    // localStorage.removeItem('user');
+    // Redirect to login page
+    // window.location.href = 'login.html';
+    alert('Logout functionality would go here.');
+}
+
+// Initialize the form
+document.addEventListener('DOMContentLoaded', function() {
+    // Set current date as max for date of birth
+    const today = new Date().toISOString().split('T')[0];
+    document.querySelector('input[name="dateOfBirth"]').setAttribute('max', today);
+    
+    // Initialize the form at step 1
+    showStep(1);
+});
+
+
+
+    </script>
+</body> 
