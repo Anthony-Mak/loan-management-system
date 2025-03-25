@@ -109,8 +109,6 @@ class LoanApplicationController extends Controller
                     'other_bank' => $request->other_bank,
                     'other_account_type' => $request->other_account_type
                 ]
-                
-
             );
             
             Log::debug('Creating new loan application:', [
@@ -235,7 +233,7 @@ class LoanApplicationController extends Controller
     }
 }*/
 
-public function storePolicyAcknowledgment(Request $request)
+/* public function storePolicyAcknowledgment(Request $request)
 {
     $request->validate([
         'loan_id' => 'required|exists:loan_applications,loan_id',
@@ -257,27 +255,127 @@ public function storePolicyAcknowledgment(Request $request)
     // Skip the database update and proceed directly to the next step
     Log::info('Policy acknowledgment bypassed', [
         'loan_id' => $loan->loan_id,
-        'redirect_to' => route('employee.loan.pledge_form', ['loan' => $loan->loan_id])
+        'redirect_to' => route('employee.loan.pledge', ['loan' => $loan->loan_id])
     ]);
     
-    return redirect()->route('employee.loan.pledge_form', ['loan' => $loan->loan_id])
+    return redirect()->route('employee.loan.pledge', ['loan' => $loan->loan_id])
         ->with('success', 'Proceeding to pledge form.');
 }
 
+
+ */
+public function storePolicyAcknowledgment(Request $request)
+{
+    Log::info('Policy Acknowledgment Method Called', [
+        'request_data' => $request->all(),
+        'user_id' => Auth::id(),
+        'employee_id' => Auth::user()->employee_id
+    ]);
+
+    try {
+        $request->validate([
+            'loan_id' => 'required|exists:loan_applications,loan_id',
+            'signature' => 'required|string|max:100'
+        ]);
+    } catch (\Illuminate\Validation\ValidationException $e) {
+        Log::error('Validation Failed in Policy Acknowledgment', [
+            'errors' => $e->errors(),
+            'input' => $request->all()
+        ]);
+        return back()->withErrors($e->validator)->withInput();
+    }
+    
+    $loan = LoanApplication::findOrFail($request->loan_id);
+    
+    Log::info('Loan Details Found', [
+        'loan_id' => $loan->loan_id,
+        'employee_id' => $loan->employee_id,
+        'current_user_employee_id' => Auth::user()->employee_id
+    ]);
+
+    // Check if this loan belongs to the authenticated user
+    if ($loan->employee_id !== Auth::user()->employee_id) {
+        Log::error('Unauthorized policy acknowledgment attempt', [
+            'loan_id' => $request->loan_id,
+            'user_id' => Auth::user()->id,
+            'employee_id' => Auth::user()->employee_id
+        ]);
+        abort(403);
+    }
+    
+    Log::info('Redirecting to Pledge Form', [
+        'loan_id' => $loan->loan_id,
+        'route' => route('employee.loan.pledge', ['loan' => $loan->loan_id])
+    ]);
+    
+    return redirect()->route('employee.loan.pledge', ['loan' => $loan->loan_id])
+        ->with('success', 'Proceeding to pledge form.');
+}
     /**
  * Show the pledge form
  */
-public function showPledgeForm(Request $request, $loanId)
+/* public function showPledgeForm(Request $request, $loanId)
 {
     $loan = LoanApplication::with(['employee', 'loanType'])
         ->findOrFail($loanId);
     
     // Check if this loan belongs to the authenticated user
     if ($loan->employee_id !== Auth::user()->employee_id) {
+        Log::error('Unauthorized policy acknowledgment attempt', [
+            'loan_id' => $request->loan_id,
+            'user_id' => Auth::user()->id,
+            'employee_id' => Auth::user()->employee_id
+        ]);
         abort(403, 'Unauthorized access');
     }
 
+    Log::info('Policy acknowledgment bypassed', [
+        'loan_id' => $loan->loan_id,
+        'redirect_to' => route('employee.loan.pledge', ['loan' => $loan->loan_id])
+    ]);
+
     return view('employee.loan.pledge_form', compact('loan'));
+} */
+public function showPledgeForm(Request $request, $loanId)
+{
+    Log::info('Pledge Form Method Called', [
+        'loan_id' => $loanId,
+        'current_user_id' => Auth::id(),
+        'current_employee_id' => Auth::user()->employee_id
+    ]);
+
+    try {
+        $loan = LoanApplication::with(['employee', 'loanType'])
+            ->findOrFail($loanId);
+        
+        Log::info('Loan Retrieved for Pledge Form', [
+            'loan_details' => [
+                'id' => $loan->loan_id,
+                'employee_id' => $loan->employee_id,
+                'amount' => $loan->amount
+            ]
+        ]);
+        
+        // Check if this loan belongs to the authenticated user
+        if ($loan->employee_id !== Auth::user()->employee_id) {
+            Log::warning('Unauthorized access attempt to pledge form', [
+                'loan_id' => $loanId,
+                'requesting_user_id' => Auth::id(),
+                'loan_owner_id' => $loan->employee_id
+            ]);
+            abort(403, 'Unauthorized access');
+        }
+
+        return view('employee.loan.pledge_form', compact('loan'));
+    } catch (\Exception $e) {
+        Log::error('Error in Pledge Form Method', [
+            'error_message' => $e->getMessage(),
+            'loan_id' => $loanId
+        ]);
+        
+        return redirect()->route('employee.dashboard')
+            ->with('error', 'Unable to load pledge form: ' . $e->getMessage());
+    }
 }
 
 public function storePledge(Request $request)
@@ -332,13 +430,23 @@ public function storePledge(Request $request)
         }
 
         // Update loan status to "Submitted"
-        $loan->update(['status' => 'Submitted']);
+        $loan->update(['status' => 'pending']);
 
         DB::commit();
+
+        Log::info('Pledge Submission Successful', [
+            'loan_id' => $loan->loan_id,
+            'assets_count' => count($request->assets),
+            'redirect_route' => 'employee.dashboard'
+        ]);
 
         return redirect()->route('employee.dashboard')
             ->with('success', 'Loan application has been successfully submitted with pledged assets.');
     } catch (\Exception $e) {
+        Log::error('Pledge Submission Failed', [
+            'error' => $e->getMessage(),
+            'loan_id' => $request->loan_id
+        ]);
         DB::rollBack();
         return back()
             ->withInput()

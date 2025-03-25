@@ -8,7 +8,7 @@ use App\Http\Controllers\AdminController;
 /*
 |--------------------------------------------------------------------------
 | Web Routes
-|--------------------------------------------------------------------------
+|-------------------------------------------------- ------------------------
 */
 
 // Public routes
@@ -27,8 +27,6 @@ Route::middleware(['auth'])->group(function() {
     // Common authenticated routes
     Route::post('/logout', [AuthController::class, 'logout'])->name('logout');
     Route::post('/change-password', [AuthController::class, 'changePassword'])->name('password.change.auth');
-    Route::get('/employee/loan/{loan}/policy', [LoanApplicationController::class, 'showPolicy'])->name('employee.loan.policy');
-    Route::post('/employee/loan/pledge', [LoanApplicationController::class, 'storePledge'])->name('employee.loan.pledge');
 
     // Employee portal routes
     Route::middleware(['role:employee'])->prefix('employee')->group(function () {
@@ -47,12 +45,13 @@ Route::middleware(['auth'])->group(function() {
 
         Route::put('/employee/loan/{loan}', [LoanApplicationController::class, 'update'])->name('employee.loan.update');*/
 
-        Route::post('employee/loan/policy', 'App\Http\Controllers\LoanApplicationController@storePolicyAcknowledgment')
-        ->name('employee.loan.policy.store');
+        Route::post('/loan/policy', 'App\Http\Controllers\LoanApplicationController@storePolicyAcknowledgment')->name('employee.loan.policy.store');
         
-        Route::get('/loan/{loan}/pledge', [LoanApplicationController::class, 'showPledgeForm'])->name('employee.loan.pledge_form');
-        
-        Route::post('/loan/pledge', [LoanApplicationController::class, 'storePledge'])->name('employee.loan.store_pledge');
+        Route::get('/loan/{loan}/policy', [LoanApplicationController::class, 'showPolicy'])->name('employee.loan.policy');
+
+        Route::get('/loan/{loan}/pledge', [LoanApplicationController::class, 'showPledgeForm'])->name('employee.loan.pledge');
+       
+        Route::post('/loan/pledge', [LoanApplicationController::class, 'storePledge'])->name('employee.loan.pledge.store');
 
         Route::post('/employee/loan/policy-acknowledge', [LoanApplicationController::class, 'acknowledgePolicyRoute'])->name('employee.loan.acknowledge_policy');
     });

@@ -9,7 +9,8 @@
         body {
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
             line-height: 1.6;
-            margin: 20px;
+            margin: 0; /* Remove default body margin */
+            padding: 0; /* Remove default body padding */
             background-color: #f4f4f4;
         }
 
@@ -17,10 +18,10 @@
             display: flex;
             justify-content: space-between;
             align-items: center;
-            background-color: #007bff;
+            background-color: #4361ee;
             color: white;
-            padding: 10px 20px;
-            border-radius: 5px;
+            padding: 1rem 2rem;    
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
         }
 
         .navbar-brand {
@@ -34,15 +35,15 @@
         }
 
         .user-profile {
-            width: 30px;
-            height: 30px;
+            background-color: white;
+            width: 40px;
+            height: 40px;
             border-radius: 50%;
-            background-color: #ffffff;
-            color: #007bff;
             display: flex;
-            justify-content: center;
             align-items: center;
+            justify-content: center;
             font-weight: bold;
+            color: #4361ee;
             margin-right: 10px;
         }
 
@@ -51,45 +52,35 @@
         }
 
         .logout-btn {
-            background-color: #dc3545;
+            background-color: transparent;
+            border: 1px solid white;
             color: white;
-            padding: 5px 10px;
-            border: none;
+            padding: 0.7rem 1.2rem;
+            
             border-radius: 4px;
             cursor: pointer;
-            transition: background-color 0.3s ease;
+            transition: all 0.3s ease;
         }
 
         .logout-btn:hover {
-            background-color: #c82333;
+            background-color: white;
+            color: #4361ee;
         }
+
+        
 
         /* Existing CSS */
         .container {
             width: 90%;
             max-width: 800px;
-            margin: auto;
-            overflow: hidden;
-            padding: 20px;
-            background-color: white;
-            border-radius: 8px;
-            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
-            
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            line-height: 1.6;
-            margin: 20px;
-            background-color: #f4f4f4;
-        }
-        .container {
-            width: 90%;
-            max-width: 800px;
-            margin: auto;
+            margin: 20px auto; /* Center the container with margin */
             overflow: hidden;
             padding: 20px;
             background-color: white;
             border-radius: 8px;
             box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
         }
+        
         table {
             width: 100%;
             border-collapse: collapse;

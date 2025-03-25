@@ -14,6 +14,91 @@
             background-color: #f4f4f4;
             color: #333;
         }
+        /* ========== Navbar Styles ========== */
+.navbar {
+    background-color: #4361ee;
+    color: white;
+    width: 100%;
+    padding: 1rem 2rem;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+    position: fixed;
+    top: 0;
+    left: 0;
+}
+
+.user-info {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem; 
+}
+
+.user-profile {
+    background-color: white;
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: bold;
+    color: #4361ee;
+    flex-shrink: 0; 
+}
+
+#username-display {
+    margin-right: 0.5rem;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis; 
+    max-width: 150px; 
+}
+
+.logout-btn {
+    background-color: transparent;
+    border: 1px solid white;
+    color: white;
+    padding: 0.8rem 1.2rem;
+    margin-right: 3rem;
+    border-radius: 4px;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    white-space: nowrap; 
+}
+
+.logout-btn:hover {
+    background-color: white;
+    color: #4361ee;
+}
+
+/* Responsive adjustments for smaller screens */
+@media (max-width: 600px) {
+    .navbar {
+        padding: 1rem;
+    }
+
+    .user-info {
+        gap: 0.5rem;
+    }
+
+    #username-display {
+        display: none; /* Hide username on very small screens */
+    }
+
+    .user-profile {
+        width: 35px;
+        height: 35px;
+        font-size: 0.9rem;
+    }
+
+    .logout-btn {
+        padding: 0.4rem 0.8rem;
+        font-size: 0.9rem;
+        
+    }
+}
         .container {
             width: 90%;
             max-width: 800px;
@@ -96,6 +181,17 @@
     </style>
 </head>
 <body>
+<nav class="navbar">
+        <div class="navbar-brand">Loan Management System</div>
+        <div class="user-info">
+            <div class="user-profile" id="user-initial">{{ auth()->user()->username[0] }}</div>
+            <span id="username-display">{{ auth()->user()->username }}</span>
+            <form method="POST" action="{{ route('logout') }}" class="inline">
+                @csrf
+                <button type="submit" class="logout-btn">Logout</button>
+            </form>
+        </div>
+    </nav>
     <div class="container">
         <h1>Staff Loan Policy</h1>
 
