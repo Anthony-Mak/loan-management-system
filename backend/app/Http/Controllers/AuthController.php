@@ -53,7 +53,12 @@ class AuthController extends Controller
             Log::debug('Preparing to redirect user:', [
                 'username' => $user->username,
                 'role' => $user->role,
-                'redirect_path' => $user->role === 'employee' ? '/employee/dashboard' : '/admin/dashboard'
+                'redirect_path' => match($user->role) {
+                    'employee' => '/employee/dashboard',
+                    'admin' => '/admin/dashboard',
+                    'hr' => '/hr/dashboard',
+                    default => '/'
+                }
             ]);
             
             return response()->json([

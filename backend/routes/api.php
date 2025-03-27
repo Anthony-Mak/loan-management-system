@@ -52,13 +52,16 @@ Route::middleware([
             // User management
             Route::apiResource('/users', UserController::class);
         });
-        
-        // HR routes
+
         Route::middleware('role:hr')->prefix('hr')->group(function () {
             Route::get('/loan-applications', [HrController::class, 'loanApplications']);
+            Route::get('/loan-applications/{id}', [HrController::class, 'getLoanDetails']);
             Route::put('/loan-applications/{id}', [HrController::class, 'updateApplication']);
+            Route::get('/loans', [HrController::class, 'loans']);
+            Route::get('/loans/{id}', [HrController::class, 'getLoanDetails']);
             Route::get('/employees', [HrController::class, 'employees']);
             Route::get('/employees/{id}', [HrController::class, 'employeeDetails']);
+            Route::get('/reports', [HrController::class, 'generateReport']);
         });
         
         // Employee routes

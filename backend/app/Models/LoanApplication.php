@@ -30,4 +30,27 @@ class LoanApplication extends Model
     {
         return $this->belongsTo(LoanType::class);
     }
+    public function scopePeriod($query, $periodRange)
+{
+    return $query->whereBetween('application_date', $periodRange);
+}
+
+public function scopeApproved($query)
+{
+    return $query->where('status', 'Approved');
+}
+
+public function scopeRejected($query)
+{
+    return $query->where('status', 'Rejected');
+}
+
+public function scopePending($query)
+{
+    return $query->where('status', 'Pending');
+}
+public function processedBy()
+{
+    return $this->belongsTo(User::class, 'processed_by', 'user_id');
+}
 }

@@ -199,7 +199,7 @@
     
     // Function to redirect based on role
     function redirectBasedOnRole(role) {
-      const redirectPath = (role === 'admin' || role === 'manager') ? '/admin/dashboard' : '/employee/dashboard';
+      const redirectPath = (role === 'admin' ? '/admin/dashboard' : role === 'hr' ? '/hr/dashboard' : role === 'employee' ? '/employee/dashboard' :'/login');
       console.log(`Redirecting to: ${redirectPath}`);
       window.location.href = redirectPath;
     }
