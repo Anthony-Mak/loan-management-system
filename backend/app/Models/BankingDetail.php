@@ -3,9 +3,11 @@
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
+use App\Traits\AuditLogTrait;
 
 class BankingDetail extends Model
 {
+    use AuditLogTrait;  
     protected $primaryKey = 'banking_id';
     protected $fillable = [
         'employee_id',

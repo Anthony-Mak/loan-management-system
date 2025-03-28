@@ -3,9 +3,11 @@
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
+use App\Traits\AuditLogTrait;
 
 class Collateral extends Model
 {
+    use AuditLogTrait;
     protected $fillable = [
         'loan_id',
         'asset_description',

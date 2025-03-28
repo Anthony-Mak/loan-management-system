@@ -3,9 +3,11 @@
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
+use App\Traits\AuditLogTrait;
 
 class LoanApplication extends Model
 {
+    use AuditLogTrait;
     protected $primaryKey = 'loan_id'; // Specify the primary key column name
     
     protected $fillable = [

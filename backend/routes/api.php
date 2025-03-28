@@ -43,8 +43,13 @@ Route::middleware([
         
         // Admin routes
         Route::middleware('role:admin')->prefix('admin')->group(function () {
-            Route::get('/loan-applications', [AdminController::class, 'loanApplications']);
-            Route::put('/loan-applications/{id}', [AdminController::class, 'updateApplication']);
+            Route::post('/users', [AdminController::class, 'createUser']);
+            Route::put('/users/{user}/reset-password', [AdminController::class, 'resetPassword']);
+            Route::post('/loan-types', [AdminController::class, 'createLoanType']);
+            Route::put('/loan-types/{id}', [AdminController::class, 'updateLoanType']);
+            Route::post('/branches', [AdminController::class, 'createBranch']);
+            Route::put('/branches/{id}', [AdminController::class, 'updateBranch']);
+            Route::get('/system-config', [AdminController::class, 'getSystemConfig']);
             Route::get('/employees', [AdminController::class, 'employees']);
             Route::get('/employees/{id}', [AdminController::class, 'employeeDetails']);
             Route::post('/loan-report', [AdminController::class, 'loanReport']);

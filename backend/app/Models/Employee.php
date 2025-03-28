@@ -4,10 +4,12 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\SoftDeletes;
+use App\Traits\AuditLogTrait;
 
 class Employee extends Model
 {
-    use HasFactory;
+    use HasFactory, SoftDeletes, AuditLogTrait;
 
     protected $primaryKey = 'employee_id';
 

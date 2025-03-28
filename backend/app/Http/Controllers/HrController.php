@@ -48,6 +48,10 @@ class HrController extends Controller
     public function updateApplication(Request $request, $id)
     {
         $currentUser = Auth::user();
+        
+        if (!Auth::user()->hasRole('hr')) {
+            abort(403);
+        }
 
         // Log current user details
     Log::info('Current User Details', [

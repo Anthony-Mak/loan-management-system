@@ -70,10 +70,7 @@ Route::middleware(['auth'])->group(function() {
         Route::get('/dashboard', function () {
             return view('admin.dashboard');
         })->name('admin.dashboard');
-
-        Route::get('/applications', function () {
-            return view('admin.dashboard');})->name('admin.applications');
-
+        
         Route::get('/employees', function () {
             return view('admin.dashboard');})->name('admin.employees');
 
