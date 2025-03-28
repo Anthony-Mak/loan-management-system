@@ -193,4 +193,8 @@ class AdminController extends Controller
 
         return response()->json($logs);
     }
+    public function showAdminReports()
+    {
+        return view('admin.reports.admin_reports');
+    }
 }

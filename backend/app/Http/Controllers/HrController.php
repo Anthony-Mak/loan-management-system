@@ -45,6 +45,10 @@ class HrController extends Controller
         return $query->paginate($request->get('per_page', 10));
     }
 
+    public function showHrReports()
+    {
+        return view('admin.reports.hr_reports');
+    }
     public function updateApplication(Request $request, $id)
     {
         $currentUser = Auth::user();
@@ -137,22 +141,34 @@ class HrController extends Controller
 
     public function generateReport(Request $request)
     {
-        $period = $request->input('period', 'monthly');
-        $request->validate([
-            'period' => 'in:weekly,monthly,quarterly,yearly,custom',
-            'start_date' => 'date',
-            'end_date' => 'date|after:start_date',
-        ]);
-
         $period = $this->resolvePeriod($request);
-
+    
         try {
+            // Basic report data
             $reportData = [
                 'total_applications' => LoanApplication::period($period)->count(),
                 'approved_applications' => LoanApplication::period($period)->approved()->count(),
                 'rejected_applications' => LoanApplication::period($period)->rejected()->count(),
                 'pending_applications' => LoanApplication::period($period)->pending()->count(),
                 'average_loan_amount' => LoanApplication::period($period)->avg('amount'),
+                
+                // Calculate average processing time for processed loans
+                'avg_processing_days' => LoanApplication::period($period)
+                    ->whereNotNull('processed_date')
+                    ->whereNotNull('application_date')
+                    ->get()
+                    ->avg(function($loan) {
+                        $applicationDate = is_string($loan->application_date) 
+                           ? Carbon::parse($loan->application_date) 
+                           : $loan->application_date;
+                        $processedDate = is_string($loan->processed_date)
+                           ? Carbon::parse($loan->processed_date)
+                           : $loan->processed_date;
+
+                        return $applicationDate->diffInDays($processedDate);
+                    }) ?? 0,
+                    
+                // Department breakdown with more detailed information
                 'department_breakdown' => Employee::whereHas('loanApplications', function($q) use ($period) {
                     $q->period($period);
                 })
@@ -161,36 +177,39 @@ class HrController extends Controller
                 }])
                 ->get()
                 ->mapWithKeys(function($employee) {
-                    // Safely handle potential null or missing data
-                    if (!$employee || !$employee->department) {
-                        return [];
-                    }
                     return [
                         $employee->department => $employee->loanApplications->count()
                     ];
                 })
-                ->filter(), // Remove any empty entries
-                'trend_data' => LoanApplication::period($period)
-                    ->selectRaw("DATE_FORMAT(application_date, '%Y-%m') as month, 
-                                COUNT(*) as total,
-                                SUM(CASE WHEN status = 'Approved' THEN 1 ELSE 0 END) as approved,
-                                SUM(CASE WHEN status = 'Rejected' THEN 1 ELSE 0 END) as rejected")
-                    ->groupBy('month')
-                    ->orderBy('month')
-                    ->get()
+                ->filter(),
+                
+                // Most common loan type
+                'most_common_loan_type' => LoanApplication::period($period)
+                    ->select('loan_type_id')
+                    ->groupBy('loan_type_id')
+                    ->orderByRaw('COUNT(*) DESC')
+                    ->with('loanType')
+                    ->first()?->loanType
             ];
-
+    
             return response()->json($reportData);
         } catch (\Exception $e) {
-            // Log the full error for debugging
             Log::error('Report Generation Error: ' . $e->getMessage());
-            Log::error($e->getTraceAsString());
-
             return response()->json([
                 'error' => 'Failed to generate report',
                 'message' => $e->getMessage()
             ], 500);
         }
+    }
+    
+    // Add new endpoint to get departments for reports
+    public function getDepartments()
+    {
+        return Employee::select('department')
+            ->distinct()
+            ->whereNotNull('department')
+            ->where('department', '!=', '')
+            ->pluck('department');
     }
     
 

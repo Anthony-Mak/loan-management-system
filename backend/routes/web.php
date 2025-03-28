@@ -61,8 +61,11 @@ Route::middleware(['auth'])->group(function() {
         Route::get('/employees', function () {
             return view('admin.dashboard');})->name('hr.employees');
 
+        // Redirecting to HR-specific reports blade
         Route::get('/reports', function () {
-            return view('admin.dashboard');})->name('hr.reports');
+            return view('admin.reports.hr_reports', [
+                'reportType' => 'hr']);})->name('hr.reports');
+        Route::get('/hr/reports', [HrController::class, 'showHrReports']);
     });
 
     // Admin portal routes
@@ -74,7 +77,11 @@ Route::middleware(['auth'])->group(function() {
         Route::get('/employees', function () {
             return view('admin.dashboard');})->name('admin.employees');
 
-        Route::get('/reports', function () {
-            return view('admin.dashboard');})->name('admin.reports');
+            Route::get('/reports', function () {
+                return view('admin.reports.admin_reports', [
+                    'reportType' => 'admin']);})->name('admin.reports');
+
+        Route::get('/admin/reports', [AdminController::class, 'showAdminReports']);
+        
     });
 });

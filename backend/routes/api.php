@@ -8,6 +8,7 @@ use App\Http\Controllers\AdminController;
 use App\Http\Controllers\HrController;
 use App\Http\Controllers\UserController;
 use App\Http\Controllers\ApiController;
+use App\Http\Controllers\AdminReportController;
 
 /*
 |--------------------------------------------------------------------------
@@ -53,6 +54,11 @@ Route::middleware([
             Route::get('/employees', [AdminController::class, 'employees']);
             Route::get('/employees/{id}', [AdminController::class, 'employeeDetails']);
             Route::post('/loan-report', [AdminController::class, 'loanReport']);
+            Route::get('/system-report', [AdminReportController::class, 'generateSystemReport']);
+            Route::get('/branch-statistics', [AdminReportController::class, 'getBranchStatistics']);
+            Route::get('/branches', [AdminReportController::class, 'getBranchStatistics']);
+
+
             
             // User management
             Route::apiResource('/users', UserController::class);
@@ -67,6 +73,7 @@ Route::middleware([
             Route::get('/employees', [HrController::class, 'employees']);
             Route::get('/employees/{id}', [HrController::class, 'employeeDetails']);
             Route::get('/reports', [HrController::class, 'generateReport']);
+            Route::get('/departments', [HrController::class, 'getDepartments']);
         });
         
         // Employee routes
