@@ -13,7 +13,7 @@ return new class extends Migration
     {
         Schema::create('banking_details', function (Blueprint $table) {
             $table->id('banking_id');
-            $table->string('employee_id', 30);
+            $table->unsignedBigInteger('employee_id');
             $table->foreign('employee_id')->references('employee_id')->on('employees')->onDelete('cascade');
             $table->boolean('has_zwmb_account')->default(false);
             $table->integer('years_with_zwmb')->nullable();

@@ -13,8 +13,11 @@ class HrController extends Controller
 {
     public function loanApplications(Request $request)
     {
-        $query = LoanApplication::with(['employee', 'loanType'])
-            ->orderBy('application_date', 'desc');
+        $query = LoanApplication::with([
+            'employee', 
+            'loanType',
+            'processedBy'
+        ])->orderBy('application_date', 'desc');
 
         // Advanced filtering
         $filters = $request->only(['status', 'department', 'loan_type', 'date_from', 'date_to']);
@@ -53,7 +56,7 @@ class HrController extends Controller
     {
         $currentUser = Auth::user();
         
-        if (!Auth::user()->hasRole('hr')) {
+        if (Auth::user()->role !== 'hr') {
             abort(403);
         }
 
@@ -75,39 +78,42 @@ class HrController extends Controller
         $loan->update([
             'status' => $request->status,
             'review_notes' => $request->review_notes,
-            'processed_by' => Auth::user()->employee_id,
+            'processed_by' => $currentUser->user_id,
             'processed_date' => now()
         ]);
-         // Log loan update details
-    Log::info('Loan Update Details', [
-        'loan_id' => $loan->id,
-        'processed_by' => $loan->processed_by,
-        'processed_by_user' => $loan->processedBy ? $loan->processedBy->toArray() : 'No processed by user found'
-    ]);
+        
+        // Log loan update details
+        Log::info('Loan Update Details', [
+            'loan_id' => $loan->id,
+            'processed_by' => $loan->processed_by,
+            'processed_by_user' => $loan->processedBy ? $loan->processedBy->toArray() : 'No processed by user found',
+            'current_user_id' => $currentUser->user_id,
+    'current_user_name' => $currentUser->username
+        ]);
 
         // Add notification logic here
-        
         return response()->json([
             'message' => 'Application updated successfully',
             'loan' => $loan->fresh(['employee', 'loanType', 'processedBy'])
         ]);
     }
     public function getLoanDetails($id)
-{
-    $loan = LoanApplication::with([
-        'employee', 
-        'loanType', 
-        'processedBy'  // Add this for comprehensive details
-    ])->findOrFail($id);
+    {
+        $loan = LoanApplication::with([
+            'employee', 
+            'loanType', 
+            'processedBy'
+            ])->findOrFail($id);
+           
+            return response()->json($loan);
+    }
 
-    return response()->json($loan);
-}
-    public function loans(Request $request)  // Instead of loanApplications
+    public function loans(Request $request) 
     {
         return $this->loanApplications($request);
     }
     
-    public function reports(Request $request)  // Add this method
+    public function reports(Request $request) 
     {
         return $this->generateReport($request);
     }
@@ -136,7 +142,9 @@ class HrController extends Controller
                   ->with('loanType');
             },
             'branch'
-        ])->findOrFail($id);
+        ])->where('employee_id', $id)
+            ->orWhere('employee_id', str_pad($id, 2, '0', STR_PAD_LEFT))
+            ->first();
     }
 
     public function generateReport(Request $request)

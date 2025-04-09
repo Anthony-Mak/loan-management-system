@@ -20,9 +20,11 @@ Route::middleware([
     'api',
     \Laravel\Sanctum\Http\Middleware\EnsureFrontendRequestsAreStateful::class,
     \Illuminate\Routing\Middleware\SubstituteBindings::class
-])->group(function () {
+    ])->group(function () {
+
     // Authentication routes
     Route::post('/login', [AuthController::class, 'login']);
+    Route::post('/change-password', [AuthController::class, 'changePassword']);
     
     // Public API endpoints
     Route::post('/log-error', [ApiController::class, 'logError']);
@@ -35,7 +37,7 @@ Route::middleware([
     // Protected API routes
     Route::middleware('auth:sanctum')->group(function() {
         Route::post('/logout', [AuthController::class, 'logout']);
-        Route::post('/change-password', [UserController::class, 'changePassword'])->withoutMiddleware(['verify_csrf_token']);
+        
         Route::get('/check-session', fn() => response()->json(['valid' => true]));
         
         // Loan routes accessible to all authenticated users
@@ -44,24 +46,30 @@ Route::middleware([
         
         // Admin routes
         Route::middleware('role:admin')->prefix('admin')->group(function () {
-            Route::post('/users', [AdminController::class, 'createUser']);
-            Route::put('/users/{user}/reset-password', [AdminController::class, 'resetPassword']);
             Route::post('/loan-types', [AdminController::class, 'createLoanType']);
             Route::put('/loan-types/{id}', [AdminController::class, 'updateLoanType']);
+            Route::get('/loan-types/{id}', [AdminController::class, 'getLoanType']);
             Route::post('/branches', [AdminController::class, 'createBranch']);
             Route::put('/branches/{id}', [AdminController::class, 'updateBranch']);
             Route::get('/system-config', [AdminController::class, 'getSystemConfig']);
-            Route::get('/employees', [AdminController::class, 'employees']);
-            Route::get('/employees/{id}', [AdminController::class, 'employeeDetails']);
+            Route::post('/employees', [AdminController::class, 'createEmployee']);
+            Route::get('/employees', [AdminController::class, 'getEmployees']);
+            Route::get('/employees/{id}', [AdminController::class, 'getEmployeeDetails']);
             Route::post('/loan-report', [AdminController::class, 'loanReport']);
             Route::get('/system-report', [AdminReportController::class, 'generateSystemReport']);
             Route::get('/branch-statistics', [AdminReportController::class, 'getBranchStatistics']);
             Route::get('/branches', [AdminReportController::class, 'getBranchStatistics']);
+            Route::get('/dashboard', [AdminController::class, 'dashboard']);
+            Route::get('/audit-logs', [AdminController::class, 'viewAuditLogs']);
+            Route::get('/loan-types', [AdminController::class, 'getLoanTypes']);
+            Route::get('/branches', [AdminController::class, 'getBranches']);
 
-
-            
             // User management
             Route::apiResource('/users', UserController::class);
+            Route::put('/users/{userId}/role', [AdminController::class, 'updateUserRole']);
+            Route::put('/users/{userId}/status', [AdminController::class, 'updateUserStatus']);
+            Route::post('/users', [AdminController::class, 'createUser']);
+            Route::put('/users/{user}/reset-password', [AdminController::class, 'resetUserPassword']);
         });
 
         Route::middleware('role:hr')->prefix('hr')->group(function () {
@@ -99,7 +107,6 @@ Route::middleware([
                 'column_count' => count($columns)
             ]);
         }
-        
         return response()->json($schema);
     })->middleware('auth');
     Log::debug('PHP & environment information:', [

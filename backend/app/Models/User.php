@@ -123,8 +123,11 @@ class User extends Authenticatable
                     ]);
                 }
 
-                // Mark password change as required
-                $user->password_change_required = true;
+                // Only set password_change_required to true if this is an admin reset
+                 // Don't override it if it's being explicitly set to false in a password change operation
+                if (!$user->isDirty('password_change_required')) {
+                    $user->password_change_required = true;
+                }
             }
 
             // Log user status changes

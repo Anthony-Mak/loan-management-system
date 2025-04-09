@@ -6,497 +6,14 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="csrf-token" content="{{ csrf_token() }}">
     <title>Loan Management System - {{ ucfirst(Auth::user()->role) }} Dashboard</title>
-    <style>
-
-        body {
-            font-family: sans-serif;
-            margin: 0;
-            padding: 0;
-            background-color: #f4f4f4;
-            display: flex;
-        }
-
-        header {
-            background-color: #007bff;
-            color: white;
-            text-align: center;
-            padding: 1rem 0;
-        }
-
-        .container {
-            width: 80%;
-            margin: 20px auto;
-            background-color: white;
-            padding: 20px;
-            border-radius: 8px;
-            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
-            flex-grow: 1;
-        }
-
-        .user-info {
-            text-align: right;
-            margin-bottom: 20px;
-        }
-
-        #admin-loans {
-            margin-top: 20px;
-        }
-
-        .loan-item {
-            border: 1px solid #ddd;
-            padding: 10px;
-            margin-bottom: 10px;
-            border-radius: 4px;
-        }
-
-        .admin-actions {
-            margin-top: 10px;
-        }
-
-        .admin-actions button {
-            padding: 5px 10px;
-            margin-right: 5px;
-            cursor: pointer;
-        }
-
-        .status.approved {
-            color: green;
-        }
-
-        .status.rejected {
-            color: red;
-        }
-
-        .status.pending {
-            color: orange;
-        }
-
-        .logout-btn {
-            background-color: #dc3545;
-            color: white;
-            border: none;
-            padding: 8px 15px;
-            border-radius: 4px;
-            cursor: pointer;
-            margin-top: 20px;
-        }
-
-        .sidebar {
-            width: 200px;
-            background-color: #333;
-            color: white;
-            padding: 20px 0;
-            position: sticky;
-            top: 0;
-            height: 100vh;
-
-            transition: width 0.3s ease;
-            overflow: hidden;
-        }
-
-        .sidebar.collapsed {
-            width: 60px;
-        }
-
-        .sidebar ul {
-            list-style: none;
-            padding: 0;
-            margin: 0;
-        }
-
-        .sidebar li {
-            padding: 10px 20px;
-            cursor: pointer;
-            white-space: nowrap;
-            overflow: hidden;
-            transition: padding 0.3s ease;
-        }
-
-        .sidebar.collapsed li {
-            padding: 10px 10px;
-        }
-
-        .sidebar li:hover {
-            background-color: #555;
-        }
-
-        .content {
-            flex-grow: 1;
-        }
-
-        #collapse-toggle {
-            cursor: pointer;
-            padding: 10px;
-            background-color: #444;
-            color: white;
-            text-align: center;
-        }
-
-        .sidebar.collapsed #collapse-toggle::before {
-            content: '▶';
-        }
-
-        #collapse-toggle::before {
-            content: '◀';
-        }
-
-        .sidebar li span {
-            display: inline-block;
-            transition: opacity 0.3s ease;
-        }
-
-        .sidebar.collapsed li span {
-            opacity: 0;
-        }
-
-        .notification {
-            position: fixed;
-            top: 20px;
-            right: 20px;
-            padding: 15px 25px;
-            border-radius: 5px;
-            color: white;
-            z-index: 1000;
-        }
-        .notification.success { background-color: #4CAF50; }
-        .notification.error { background-color: #ff5252; }
-
-        .loader {
-            border: 5px solid #f3f3f3;
-            border-top: 5px solid #3498db;
-            border-radius: 50%;
-            width: 40px;
-            height: 40px;
-            animation: spin 2s linear infinite;
-            margin: 20px auto;
-        }
-
-        @keyframes spin {
-            0% { transform: rotate(0deg); }
-            100% { transform: rotate(360deg); }
-        }
-
-        #loading-indicator {
-            text-align: center;
-            margin: 20px 0;
-        }
-
-        .loan-list {
-            display: flex;
-            flex-direction: column;
-            gap: 10px;
-        }
-        .modal-overlay {
-    position: fixed;
-    top: 0;
-    left: 0;
-    right: 0;
-    bottom: 0;
-    background-color: rgba(0, 0, 0, 0.5);
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    z-index: 1000;
-}
-
-.modal-content {
-    background-color: white;
-    padding: 20px;
-    border-radius: 8px;
-    width: 80%;
-    max-width: 500px;
-    max-height: 80vh;
-    overflow-y: auto;
-}
-
-.form-group {
-    margin-bottom: 15px;
-}
-
-.form-group label {
-    display: block;
-    margin-bottom: 5px;
-}
-
-.form-group textarea {
-    width: 100%;
-    padding: 8px;
-    border: 1px solid #ddd;
-    border-radius: 4px;
-}
-
-.modal-actions {
-    display: flex;
-    justify-content: space-between;
-    margin-top: 20px;
-}
-
-.modal-actions button {
-    padding: 8px 16px;
-    border-radius: 4px;
-    cursor: pointer;
-    border: none;
-}
-
-.approve-btn {
-    background-color: #4CAF50;
-    color: white;
-}
-
-.reject-btn {
-    background-color: #f44336;
-    color: white;
-}
-
-.cancel-btn {
-    background-color: #ccc;
-}
-
-.error-message {
-    color: #f44336;
-    padding: 10px;
-    background-color: #ffebee;
-    border-radius: 4px;
-    margin-bottom: 15px;
-}
-
-/* For reports  */
-.hr-reports-container {
-        max-width: 1200px;
-        margin: 0 auto;
-        padding: 20px;
-    }
-
-    .reports-title {
-        text-align: center;
-        color: #007bff;
-        margin-bottom: 30px;
-    }
-
-    .reports-grid {
-        display: grid;
-        grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
-        gap: 20px;
-    }
-
-    .report-card {
-        background-color: white;
-        border-radius: 8px;
-        box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
-        padding: 20px;
-        text-align: center;
-    }
-
-    .report-card h3 {
-        color: #333;
-        border-bottom: 2px solid #007bff;
-        padding-bottom: 10px;
-        margin-bottom: 15px;
-    }
-
-    .report-stats, .credit-stats {
-        display: flex;
-        flex-wrap: wrap;
-        justify-content: space-around;
-    }
-
-    .stat-item {
-        display: flex;
-        flex-direction: column;
-        margin: 10px;
-    }
-
-    .stat-label {
-        color: #666;
-        font-size: 0.9em;
-        margin-bottom: 5px;
-    }
-
-    .stat-value {
-        font-weight: bold;
-        font-size: 1.2em;
-    }
-
-    .stat-value.total { color: #007bff; }
-    .stat-value.approved { color: #28a745; }
-    .stat-value.pending { color: #ffc107; }
-    .stat-value.rejected { color: #dc3545; }
-
-    .department-list {
-        max-height: 200px;
-        overflow-y: auto;
-    }
-
-    .dept-item {
-        display: flex;
-        justify-content: space-between;
-        padding: 8px 0;
-        border-bottom: 1px solid #eee;
-    }
-
-    .dept-name {
-        font-weight: 500;
-    }
-
-    .dept-count {
-        color: #007bff;
-    }
-
-    .reports-container {
-    max-width: 100%;
-    margin: 0 auto;
-    padding: 0;
-}
-
-.reports-header {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    margin-bottom: 20px;
-}
-
-.reports-title {
-    color: #2c3e50;
-    margin: 0;
-}
-
-.reports-actions {
-    display: flex;
-    gap: 10px;
-}
-
-.report-filters {
-    background-color: white;
-    padding: 15px;
-    border-radius: 8px;
-    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
-    margin-bottom: 20px;
-    display: flex;
-    flex-wrap: wrap;
-    gap: 15px;
-    align-items: flex-end;
-}
-
-.filter-group {
-    flex: 1;
-    min-width: 200px;
-}
-
-.filter-group label {
-    display: block;
-    margin-bottom: 5px;
-    color: #7f8c8d;
-    font-size: 14px;
-}
-
-.filter-group select, 
-.filter-group input {
-    width: 100%;
-    padding: 8px 12px;
-    border: 1px solid #ddd;
-    border-radius: 4px;
-}
-
-.filter-buttons {
-    display: flex;
-    gap: 10px;
-}
-
-.detailed-title {
-    margin-top: 30px;
-    color: #2c3e50;
-    border-bottom: 2px solid #3498db;
-    padding-bottom: 10px;
-}
-
-.status-pill {
-    padding: 5px 10px;
-    border-radius: 20px;
-    font-size: 12px;
-    font-weight: 500;
-    display: inline-block;
-}
-
-.status-approved {
-    background-color: #e3fcef;
-    color: #1f9d55;
-}
-
-.status-pending {
-    background-color: #fff8e6;
-    color: #cb8600;
-}
-
-.status-rejected {
-    background-color: #fee2e2;
-    color: #dc2626;
-}
-
-.summary-boxes {
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
-    gap: 20px;
-    margin-bottom: 30px;
-}
-
-.summary-box {
-    background-color: white;
-    border-radius: 8px;
-    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
-    padding: 20px;
-    text-align: center;
-}
-
-.summary-box h3 {
-    margin-top: 0;
-    color: #2c3e50;
-}
-
-.summary-value {
-    font-size: 28px;
-    font-weight: bold;
-    margin: 10px 0;
-}
-
-.summary-change {
-    font-size: 14px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-}
-
-.change-up {
-    color: #2ecc71;
-}
-
-.change-down {
-    color: #e74c3c;
-}
-
-.btn-export, .btn-print {
-    padding: 8px 16px;
-    border: none;
-    border-radius: 4px;
-    cursor: pointer;
-    font-weight: 500;
-}
-
-.btn-export {
-    background-color: #2ecc71;
-    color: white;
-}
-
-.btn-print {
-    background-color: #9b59b6;
-    color: white;
-}
-    </style>
+    @vite(['resources/css/admin-hr.css'])
+    @vite(['resources/css/admin.css'])
+    
 </head>
 <body>
     <div class="sidebar" id="sidebar">
         <div id="collapse-toggle" onclick="toggleSidebar()"></div>
         <ul>
-            <li onclick="loadSection('loan-applications')"><span>Loans</span></li>
             <li onclick="loadSection('employees')"><span>Users</span></li>
             <li onclick="loadSection('reports')"><span>Reports</span></li>
             <li onclick="handleLogout()"><span>Logout</span></li>
@@ -535,16 +52,16 @@
         // Sidebar Configuration
         const sidebarConfig = {
             'admin': [
+                { label: 'Dashboard', section: 'dashboard', icon: 'Grid' },
                 { label: 'Users', section: 'users', icon: 'Users' },
+                { label: 'Employees', section: 'employees', icon: 'User' },
+                { label: 'Loan Types', section: 'loan-types', icon: 'FileText' },
+                { label: 'Branches', section: 'branches', icon: 'MapPin' },
+                { label: 'System Config', section: 'system-config', icon: 'Settings' },
+                { label: 'Audit Logs', section: 'audit-logs', icon: 'FileText' },
                 { label: 'Reports', action: 'loadReports', icon: 'BarChart2' },
                 { label: 'Logout', action: 'handleLogout', icon: 'LogOut' }
             ],
-            'hr': [
-                { label: 'Loan Applications', section: 'loans', icon: 'FileText' },
-                { label: 'Employees', section: 'employees', icon: 'User' },
-                { label: 'Reports', action: 'loadReports', icon: 'BarChart' },
-                { label: 'Logout', action: 'handleLogout', icon: 'LogOut' }
-            ]
         };
 
         // Render Sidebar
@@ -567,14 +84,18 @@
             `;
         
         }
+
         function getSidebarIcon(iconName) {
-    const icons = {
+            const icons = {
         'FileText': '📄',
         'Users': '👥',
         'User': '👤',
         'BarChart': '📊',
         'BarChart2': '📈',
-        'LogOut': '🚪'
+        'LogOut': '🚪',
+        'Settings': '⚙️',
+        'Grid': '📱',
+        'MapPin': '📍'
     };
     return icons[iconName] || '•';
 }
@@ -587,94 +108,1287 @@
                     'loans': () => renderLoans(data),
                     'users': () => renderUsers(data),
                     'reports': () => renderAdminReports(data)
-                },
-                'hr': {
-                    'loans': () => renderHrLoans(data),
-                    'employees': () => renderEmployees(data),
-                    'reports': () => renderHrReports(data)
                 }
             };
 
             container.innerHTML = renderMap[userRole][section]();
         }
 
-         // HR-specific Render Functions
-        function renderHrLoans(loans) {
-            return `
-                <div class="filters">
-                    <select id="statusFilter" onchange="loadSection('loan-applications')">
-                        <option value="">All Statuses</option>
-                        <option value="Pending">Pending</option>
-                        <option value="Approved">Approved</option>
-                        <option value="Rejected">Rejected</option>
-                    </select>
-                    <input type="date" id="fromDate" onchange="loadSection('loan-applications')">
-                    <input type="date" id="toDate" onchange="loadSection('loan-applications')">
+function renderEmployees(employees) {
+    return `
+        <div class="employees-container">
+            <div class="section-header">
+                <h2>Employee Management</h2>
+                <button class="action-btn" onclick="showCreateEmployeeModal()">Create Employee</button>
+            </div>
+            
+            <div class="filters">
+                <div class="filter-group">
+                    <label for="department-filter">Department:</label>
+                    <input type="text" id="department-filter" placeholder="Filter by department">
                 </div>
-                <h2>HR Loan Applications</h2>
-                <div class="loan-list">
-                    ${loans.data.map(loan => `
-                        <div class="loan-item">
-                            <div class="loan-header">
-                                <h3>${loan.employee.full_name} - ${loan.loan_type.name}</h3>
-                                <span class="status ${loan.status.toLowerCase()}">${loan.status}</span>
+                
+                <div class="filter-group">
+                    <label for="emp-search">Search:</label>
+                    <input type="text" id="emp-search" placeholder="Search employees..." onkeyup="handleEmployeeSearch(event)">
+                </div>
+                
+                <div class="filter-group">
+                    <button class="action-btn" onclick="applyEmployeeFilters()">Apply Filters</button>
+                    <button class="action-btn secondary" onclick="clearEmployeeFilters()">Clear</button>
+                </div>
+            </div>
+            
+            <div class="employees-list">
+                ${employees.data && employees.data.length ? 
+                    employees.data.map(employee => `
+                        <div class="employee-card" data-employee-id="${employee.employee_id}">
+                            <div class="employee-info">
+                                <h3>${employee.full_name}</h3>
+                                <p>Employee ID: ${employee.employee_id}</p>
+                                <p>Department: ${employee.department}</p>
+                                <p>Position: ${employee.position}</p>
+                                <p>Branch: ${employee.branch ? employee.branch.branch_name : 'Unknown'}</p>
                             </div>
-                            <div class="loan-details">
-                                <p>Amount: $${loan.amount} | Term: ${loan.term_months} months</p>
-                                <p>Applied: ${new Date(loan.application_date).toLocaleDateString()}</p>
+                            <div class="employee-actions">
+                                <button class="action-btn" onclick="viewEmployeeDetails(${employee.employee_id})">View Details</button>
+                                <button class="action-btn" onclick="showEditEmployeeModal(${employee.employee_id})">Edit</button>
                             </div>
-                            ${loan.status === 'Pending' ? `
-                                <div class="hr-actions">
-                                    <button onclick="showReviewModal(${loan.loan_id})">Review</button>
-                                </div>
-                            ` : ''}
                         </div>
-                    `).join('')}
-                </div>
-                ${renderPagination(loans)}
-            `;
-        }
-
-        function renderHrReports(reports) {
-            return `
-                <h2>HR Department Reports</h2>
-                <div class="reports-section">
-                    <div class="report-item">
-                        <h3>Loan Processing</h3>
-                        <p>Total Applications: ${reports.total_applications}</p>
-                        <p>Approved Applications: ${reports.approved_applications}</p>
-                        <p>Pending Applications: ${reports.pending_applications}</p>
-                        <p>Rejected Applications: ${reports.rejected_applications}</p>
-                    </div>
-                    <div class="report-item">
-                        <h3>Department Breakdown</h3>
-                        ${Object.entries(reports.department_breakdown).map(([dept, count]) => `
-                            <p>${dept}: ${count} loans</p>
-                        `).join('')}
-                    </div>
-                </div>
-            `;
-        }
-
-        function renderEmployees(employees) {
-            if (!employees || !employees.data || !Array.isArray(employees.data)) {
-        return `<div class="error-message">No employee data available</div>`;
-    }
-            return `
-        <h2>Employees</h2>
-        <div class="employees-list">
-            ${employees.data.map(employee => `
-                <div class="employee-item">
-                    <h3>${employee.full_name || 'Unknown Employee'}</h3>
-                    <p>Department: ${employee.department || 'Unknown'}</p>
-                    <p>Pending Loans: ${employee.pending_loans || 0}</p>
-                </div>
-            `).join('')}
+                    `).join('') : 
+                    '<p class="no-data">No employees found</p>'
+                }
+            </div>
+            
+            ${renderPagination(employees)}
         </div>
-        ${renderPagination(employees)}
     `;
 }
 
+function initEmployeeEventListeners() {
+    document.getElementById('emp-search')?.addEventListener('keypress', function(e) {
+        if (e.key === 'Enter') {
+            applyEmployeeFilters();
+        }
+    });
+    
+    document.getElementById('department-filter')?.addEventListener('keypress', function(e) {
+        if (e.key === 'Enter') {
+            applyEmployeeFilters();
+        }
+    });
+}
+
+function applyEmployeeFilters() {
+    const departmentFilter = document.getElementById('department-filter')?.value;
+    const searchTerm = document.getElementById('emp-search')?.value;
+    
+    const params = new URLSearchParams();
+    if (departmentFilter) params.append('department', departmentFilter);
+    if (searchTerm) params.append('search', searchTerm);
+    
+    fetch(`${apiBase}/employees?${params.toString()}`, {
+        headers: {
+            'Accept': 'application/json',
+            'X-CSRF-TOKEN': csrfToken
+        },
+        credentials: 'include'
+    })
+    .then(response => response.json())
+    .then(data => {
+        const container = document.getElementById('content-container');
+        container.innerHTML = renderEmployees(data);
+        initEmployeeEventListeners();
+    })
+    .catch(error => {
+        showNotification('Error loading employees: ' + error.message, 'error');
+    });
+}
+
+function handleEmployeeSearch(event) {
+    if (event.key === 'Enter') {
+        applyEmployeeFilters();
+    }
+}
+
+function clearEmployeeFilters() {
+    document.getElementById('department-filter').value = '';
+    document.getElementById('emp-search').value = '';
+    loadSection('employees');
+}
+
+function showCreateEmployeeModal() {
+    // First, load branches for the dropdown
+    fetch(`${apiBase}/branches`, {
+        headers: {
+            'Accept': 'application/json',
+            'X-CSRF-TOKEN': csrfToken
+        },
+        credentials: 'include'
+    })
+    .then(response => response.json())
+    .then(branches => {
+        const modalHTML = `
+            <div class="modal-overlay" id="create-employee-modal">
+                <div class="modal-content wide-modal">
+                    <h2>Create New Employee</h2>
+                    <div id="create-employee-error" class="error-message" style="display: none;"></div>
+                    
+                    <form id="create-employee-form" class="employee-form">
+                        <div class="form-section">
+                            <h3>Personal Information</h3>
+                            <div class="form-row">
+                                <div class="form-group">
+                                    <label for="employee-id">Employee ID*:</label>
+                                    <input type="text" id="employee-id" required>
+                                </div>
+                                <div class="form-group">
+                                    <label for="title">Title:</label>
+                                    <select id="title">
+                                        <option value="Mr">Mr</option>
+                                        <option value="Mrs">Mrs</option>
+                                        <option value="Ms">Ms</option>
+                                        <option value="Dr">Dr</option>
+                                    </select>
+                                </div>
+                            </div>
+                            
+                            <div class="form-row">
+                                <div class="form-group">
+                                    <label for="full-name">Full Name*:</label>
+                                    <input type="text" id="full-name" required>
+                                </div>
+                                <div class="form-group">
+                                    <label for="national-id">National ID*:</label>
+                                    <input type="text" id="national-id" required>
+                                </div>
+                            </div>
+                            
+                            <div class="form-row">
+                                <div class="form-group">
+                                    <label for="date-of-birth">Date of Birth*:</label>
+                                    <input type="date" id="date-of-birth" required>
+                                </div>
+                                <div class="form-group">
+                                    <label for="gender">Gender*:</label>
+                                    <select id="gender" required>
+                                        <option value="Male">Male</option>
+                                        <option value="Female">Female</option>
+                                        <option value="Other">Other</option>
+                                    </select>
+                                </div>
+                            </div>
+                            
+                            <div class="form-row">
+                                <div class="form-group">
+                                    <label for="marital-status">Marital Status*:</label>
+                                    <select id="marital-status" required>
+                                        <option value="Single">Single</option>
+                                        <option value="Married">Married</option>
+                                        <option value="Divorced">Divorced</option>
+                                        <option value="Widowed">Widowed</option>
+                                    </select>
+                                </div>
+                                <div class="form-group">
+                                    <label for="dependents">Dependents:</label>
+                                    <input type="number" id="dependents" min="0" value="0">
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="form-section">
+                            <h3>Contact Information</h3>
+                            <div class="form-row">
+                                <div class="form-group">
+                                    <label for="physical-address">Physical Address*:</label>
+                                    <input type="text" id="physical-address" required>
+                                </div>
+                                <div class="form-group">
+                                    <label for="accommodation-type">Accommodation Type:</label>
+                                    <input type="text" id="accommodation-type">
+                                </div>
+                            </div>
+                            
+                            <div class="form-row">
+                                <div class="form-group">
+                                    <label for="postal-address">Postal Address:</label>
+                                    <input type="text" id="postal-address">
+                                </div>
+                                <div class="form-group">
+                                    <label for="cell-phone">Cell Phone*:</label>
+                                    <input type="text" id="cell-phone" required>
+                                </div>
+                            </div>
+                            
+                            <div class="form-row">
+                                <div class="form-group">
+                                    <label for="email">Email*:</label>
+                                    <input type="email" id="email" required>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="form-section">
+                            <h3>Next of Kin</h3>
+                            <div class="form-row">
+                                <div class="form-group">
+                                    <label for="next-of-kin">Name*:</label>
+                                    <input type="text" id="next-of-kin" required>
+                                </div>
+                                <div class="form-group">
+                                    <label for="next-of-kin-cell">Cell Phone*:</label>
+                                    <input type="text" id="next-of-kin-cell" required>
+                                </div>
+                            </div>
+                            
+                            <div class="form-row">
+                                <div class="form-group">
+                                    <label for="next-of-kin-address">Address:</label>
+                                    <input type="text" id="next-of-kin-address">
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="form-section">
+                            <h3>Employment Information</h3>
+                            <div class="form-row">
+                                <div class="form-group">
+                                    <label for="branch-id">Branch*:</label>
+                                    <select id="branch-id" required>
+                                        <option value="">Select Branch</option>
+                                        ${branches.map(branch => `
+                                            <option value="${branch.branch_id}">${branch.branch_name}</option>
+                                        `).join('')}
+                                    </select>
+                                </div>
+                                <div class="form-group">
+                                    <label for="department">Department*:</label>
+                                    <input type="text" id="department" required>
+                                </div>
+                            </div>
+                            
+                            <div class="form-row">
+                                <div class="form-group">
+                                    <label for="position">Position*:</label>
+                                    <input type="text" id="position" required>
+                                </div>
+                                <div class="form-group">
+                                    <label for="hire-date">Hire Date*:</label>
+                                    <input type="date" id="hire-date" required>
+                                </div>
+                            </div>
+                            
+                            <div class="form-row">
+                                <div class="form-group">
+                                    <label for="salary-gross">Gross Salary*:</label>
+                                    <input type="number" id="salary-gross" step="0.01" min="0" required>
+                                </div>
+                                <div class="form-group">
+                                    <label for="salary-net">Net Salary*:</label>
+                                    <input type="number" id="salary-net" step="0.01" min="0" required>
+                                </div>
+                            </div>
+                        </div>
+                    </form>
+                    
+                    <div class="modal-actions">
+                        <button class="action-btn primary" onclick="createEmployee()">Create Employee</button>
+                        <button class="cancel-btn" onclick="closeModal('create-employee-modal')">Cancel</button>
+                    </div>
+                </div>
+            </div>
+        `;
+        
+        document.body.insertAdjacentHTML('beforeend', modalHTML);
+    })
+    .catch(error => {
+        showNotification('Error loading branches: ' + error.message, 'error');
+    });
+}
+
+function createEmployee() {
+    const employeeData = {
+        employee_id: document.getElementById('employee-id').value,
+        title: document.getElementById('title').value,
+        full_name: document.getElementById('full-name').value,
+        national_id: document.getElementById('national-id').value,
+        date_of_birth: document.getElementById('date-of-birth').value,
+        gender: document.getElementById('gender').value,
+        marital_status: document.getElementById('marital-status').value,
+        dependents: document.getElementById('dependents').value,
+        physical_address: document.getElementById('physical-address').value,
+        accommodation_type: document.getElementById('accommodation-type').value,
+        postal_address: document.getElementById('postal-address').value,
+        cell_phone: document.getElementById('cell-phone').value,
+        email: document.getElementById('email').value,
+        next_of_kin: document.getElementById('next-of-kin').value,
+        next_of_kin_address: document.getElementById('next-of-kin-address').value,
+        next_of_kin_cell: document.getElementById('next-of-kin-cell').value,
+        branch_id: document.getElementById('branch-id').value,
+        department: document.getElementById('department').value,
+        position: document.getElementById('position').value,
+        hire_date: document.getElementById('hire-date').value,
+        salary_gross: document.getElementById('salary-gross').value,
+        salary_net: document.getElementById('salary-net').value
+    };
+    
+    fetch(`${apiBase}/employees`, {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+            'Accept': 'application/json',
+            'X-CSRF-TOKEN': csrfToken
+        },
+        credentials: 'include',
+        body: JSON.stringify(employeeData)
+    })
+    .then(response => {
+        if (!response.ok) {
+            return response.json().then(err => {
+                throw new Error(err.message || 'Failed to create employee');
+            });
+        }
+        return response.json();
+    })
+    .then(data => {
+        showNotification('Employee created successfully');
+        closeModal('create-employee-modal');
+        loadSection('employees');
+    })
+    .catch(error => {
+        document.getElementById('create-employee-error').textContent = error.message;
+        document.getElementById('create-employee-error').style.display = 'block';
+    });
+}
+
+function viewEmployeeDetails(employeeId) {
+    fetch(`${apiBase}/employees/${employeeId}`, {
+        headers: {
+            'Accept': 'application/json',
+            'X-CSRF-TOKEN': csrfToken
+        },
+        credentials: 'include'
+    })
+    .then(response => response.json())
+    .then(employee => {
+        const modalHTML = `
+            <div class="modal-overlay" id="employee-details-modal">
+                <div class="modal-content wide-modal">
+                    <h2>Employee Details</h2>
+                    
+                    <div class="detail-sections">
+                        <div class="detail-section">
+                            <h3>Personal Information</h3>
+                            <div class="detail-row">
+                                <div class="detail-label">Employee ID:</div>
+                                <div class="detail-value">${employee.employee_id}</div>
+                            </div>
+                            <div class="detail-row">
+                                <div class="detail-label">Name:</div>
+                                <div class="detail-value">${employee.title || ''} ${employee.full_name}</div>
+                            </div>
+                            <div class="detail-row">
+                                <div class="detail-label">National ID:</div>
+                                <div class="detail-value">${employee.national_id}</div>
+                            </div>
+                            <div class="detail-row">
+                                <div class="detail-label">Date of Birth:</div>
+                                <div class="detail-value">${employee.date_of_birth}</div>
+                            </div>
+                            <div class="detail-row">
+                                <div class="detail-label">Gender:</div>
+                                <div class="detail-value">${employee.gender}</div>
+                            </div>
+                            <div class="detail-row">
+                                <div class="detail-label">Marital Status:</div>
+                                <div class="detail-value">${employee.marital_status}</div>
+                            </div>
+                            <div class="detail-row">
+                                <div class="detail-label">Dependents:</div>
+                                <div class="detail-value">${employee.dependents}</div>
+                            </div>
+                        </div>
+                        
+                        <div class="detail-section">
+                            <h3>Contact Information</h3>
+                            <div class="detail-row">
+                                <div class="detail-label">Physical Address:</div>
+                                <div class="detail-value">${employee.physical_address}</div>
+                            </div>
+                            <div class="detail-row">
+                                <div class="detail-label">Accommodation:</div>
+                                <div class="detail-value">${employee.accommodation_type || 'Not specified'}</div>
+                            </div>
+                            <div class="detail-row">
+                                <div class="detail-label">Postal Address:</div>
+                                <div class="detail-value">${employee.postal_address || 'Not specified'}</div>
+                            </div>
+                            <div class="detail-row">
+                                <div class="detail-label">Cell Phone:</div>
+                                <div class="detail-value">${employee.cell_phone}</div>
+                            </div>
+                            <div class="detail-row">
+                                <div class="detail-label">Email:</div>
+                                <div class="detail-value">${employee.email}</div>
+                            </div>
+                        </div>
+                        
+                        <div class="detail-section">
+                            <h3>Next of Kin</h3>
+                            <div class="detail-row">
+                                <div class="detail-label">Name:</div>
+                                <div class="detail-value">${employee.next_of_kin}</div>
+                            </div>
+                            <div class="detail-row">
+                                <div class="detail-label">Address:</div>
+                                <div class="detail-value">${employee.next_of_kin_address || 'Not specified'}</div>
+                            </div>
+                            <div class="detail-row">
+                                <div class="detail-label">Contact:</div>
+                                <div class="detail-value">${employee.next_of_kin_cell}</div>
+                            </div>
+                        </div>
+                        
+                        <div class="detail-section">
+                            <h3>Employment Information</h3>
+                            <div class="detail-row">
+                                <div class="detail-label">Branch:</div>
+                                <div class="detail-value">${employee.branch ? employee.branch.branch_name : 'Unknown'}</div>
+                            </div>
+                            <div class="detail-row">
+                                <div class="detail-label">Department:</div>
+                                <div class="detail-value">${employee.department}</div>
+                            </div>
+                            <div class="detail-row">
+                                <div class="detail-label">Position:</div>
+                                <div class="detail-value">${employee.position}</div>
+                            </div>
+                            <div class="detail-row">
+                                <div class="detail-label">Hire Date:</div>
+                                <div class="detail-value">${employee.hire_date}</div>
+                            </div>
+                            <div class="detail-row">
+                                <div class="detail-label">Gross Salary:</div>
+                                <div class="detail-value">$${parseFloat(employee.salary_gross).toFixed(2)}</div>
+                            </div>
+                            <div class="detail-row">
+                                <div class="detail-label">Net Salary:</div>
+                                <div class="detail-value">$${parseFloat(employee.salary_net).toFixed(2)}</div>
+                            </div>
+                        </div>
+                        
+                        <div class="detail-section">
+                            <h3>System User</h3>
+                            <div class="detail-row">
+                                <div class="detail-label">Username:</div>
+                                <div class="detail-value">${employee.user ? employee.user.username : 'No user account'}</div>
+                            </div>
+                            <div class="detail-row">
+                                <div class="detail-label">Role:</div>
+                                <div class="detail-value">${employee.user ? employee.user.role : 'N/A'}</div>
+                            </div>
+                            <div class="detail-row">
+                                <div class="detail-label">Status:</div>
+                                <div class="detail-value">${employee.user ? (employee.user.is_active ? 'Active' : 'Inactive') : 'N/A'}</div>
+                            </div>
+                            <div class="detail-row">
+                                <div class="detail-label">Last Login:</div>
+                                <div class="detail-value">${employee.user && employee.user.last_login ? new Date(employee.user.last_login).toLocaleString() : 'Never'}</div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="modal-actions">
+                        <button class="action-btn" onclick="showEditEmployeeModal(${employee.employee_id})">Edit Employee</button>
+                        ${!employee.user ? `<button class="action-btn primary" onclick="showCreateUserModal('${employee.employee_id}')">Create User Account</button>` : ''}
+                        <button class="cancel-btn" onclick="closeModal('employee-details-modal')">Close</button>
+                    </div>
+                </div>
+            </div>
+        `;
+        
+        document.body.insertAdjacentHTML('beforeend', modalHTML);
+    })
+    .catch(error => {
+        showNotification('Error loading employee details: ' + error.message, 'error');
+    });
+}
+
+function showEditEmployeeModal(employeeId) {
+    // First, load branches
+    fetch(`${apiBase}/branches`, {
+        headers: {
+            'Accept': 'application/json',
+            'X-CSRF-TOKEN': csrfToken
+        },
+        credentials: 'include'
+    })
+    .then(response => response.json())
+    .then(branches => {
+        // Then load employee details
+        return fetch(`${apiBase}/employees/${employeeId}`, {
+            headers: {
+                'Accept': 'application/json',
+                'X-CSRF-TOKEN': csrfToken
+            },
+            credentials: 'include'
+        })
+        .then(response => response.json())
+        .then(employee => {
+            return { branches, employee };
+        });
+    })
+    .then(({ branches, employee }) => {
+        const modalHTML = `
+            <div class="modal-overlay" id="edit-employee-modal">
+                <div class="modal-content wide-modal">
+                    <h2>Edit Employee</h2>
+                    <div id="edit-employee-error" class="error-message" style="display: none;"></div>
+                    
+                    <form id="edit-employee-form" class="employee-form">
+                        <div class="form-section">
+                            <h3>Personal Information</h3>
+                            <div class="form-row">
+                                <div class="form-group">
+                                    <label for="edit-employee-id">Employee ID*:</label>
+                                    <input type="text" id="edit-employee-id" value="${employee.employee_id}" readonly>
+                                </div>
+                                <div class="form-group">
+                                    <label for="edit-title">Title:</label>
+                                    <select id="edit-title">
+                                        <option value="Mr" ${employee.title === 'Mr' ? 'selected' : ''}>Mr</option>
+                                        <option value="Mrs" ${employee.title === 'Mrs' ? 'selected' : ''}>Mrs</option>
+                                        <option value="Ms" ${employee.title === 'Ms' ? 'selected' : ''}>Ms</option>
+                                        <option value="Dr" ${employee.title === 'Dr' ? 'selected' : ''}>Dr</option>
+                                    </select>
+                                </div>
+                            </div>
+                            
+                            <!-- More form fields similar to create employee but prefilled with employee data -->
+                            <div class="form-row">
+                                <div class="form-group">
+                                    <label for="edit-full-name">Full Name*:</label>
+                                    <input type="text" id="edit-full-name" value="${employee.full_name}" required>
+                                </div>
+                                <div class="form-group">
+                                    <label for="edit-national-id">National ID*:</label>
+                                    <input type="text" id="edit-national-id" value="${employee.national_id}" required>
+                                </div>
+                            </div>
+                            
+                            <div class="form-row">
+                                <div class="form-group">
+                                    <label for="edit-date-of-birth">Date of Birth*:</label>
+                                    <input type="date" id="edit-date-of-birth" value="${employee.date_of_birth}" required>
+                                </div>
+                                <div class="form-group">
+                                    <label for="edit-gender">Gender*:</label>
+                                    <select id="edit-gender" required>
+                                        <option value="Male" ${employee.gender === 'Male' ? 'selected' : ''}>Male</option>
+                                        <option value="Female" ${employee.gender === 'Female' ? 'selected' : ''}>Female</option>
+                                        <option value="Other" ${employee.gender === 'Other' ? 'selected' : ''}>Other</option>
+                                    </select>
+                                </div>
+                            </div>
+                            
+                            <!-- Continue with all other form fields -->
+                            <!-- ... -->
+                            
+                            <div class="form-row">
+                                <div class="form-group">
+                                    <label for="edit-branch-id">Branch*:</label>
+                                    <select id="edit-branch-id" required>
+                                        <option value="">Select Branch</option>
+                                        ${branches.map(branch => `
+                                            <option value="${branch.branch_id}" ${employee.branch_id == branch.branch_id ? 'selected' : ''}>${branch.branch_name}</option>
+                                        `).join('')}
+                                    </select>
+                                </div>
+                                <div class="form-group">
+                                    <label for="edit-department">Department*:</label>
+                                    <input type="text" id="edit-department" value="${employee.department}" required>
+                                </div>
+                            </div>
+                            
+                            <div class="form-row">
+                                <div class="form-group">
+                                    <label for="edit-position">Position*:</label>
+                                    <input type="text" id="edit-position" value="${employee.position}" required>
+                                </div>
+                                <div class="form-group">
+                                    <label for="edit-hire-date">Hire Date*:</label>
+                                    <input type="date" id="edit-hire-date" value="${employee.hire_date}" required>
+                                </div>
+                            </div>
+                            
+                            <div class="form-row">
+                                <div class="form-group">
+                                    <label for="edit-salary-gross">Gross Salary*:</label>
+                                    <input type="number" id="edit-salary-gross" step="0.01" min="0" value="${employee.salary_gross}" required>
+                                </div>
+                                <div class="form-group">
+                                    <label for="edit-salary-net">Net Salary*:</label>
+                                    <input type="number" id="edit-salary-net" step="0.01" min="0" value="${employee.salary_net}" required>
+                                </div>
+                            </div>
+                        </div>
+                    </form>
+                    
+                    <div class="modal-actions">
+                        <button class="action-btn primary" onclick="updateEmployee(${employee.employee_id})">Update Employee</button>
+                        <button class="cancel-btn" onclick="closeModal('edit-employee-modal')">Cancel</button>
+                    </div>
+                </div>
+            </div>
+        `;
+        
+        document.body.insertAdjacentHTML('beforeend', modalHTML);
+    })
+    .catch(error => {
+        showNotification('Error loading employee details: ' + error.message, 'error');
+    });
+}
+
+function updateEmployee(employeeId) {
+    const employeeData = {
+        title: document.getElementById('edit-title').value,
+        full_name: document.getElementById('edit-full-name').value,
+        national_id: document.getElementById('edit-national-id').value,
+        date_of_birth: document.getElementById('edit-date-of-birth').value,
+        gender: document.getElementById('edit-gender').value,
+        // Include all other fields...
+        branch_id: document.getElementById('edit-branch-id').value,
+        department: document.getElementById('edit-department').value,
+        position: document.getElementById('edit-position').value,
+        hire_date: document.getElementById('edit-hire-date').value,
+        salary_gross: document.getElementById('edit-salary-gross').value,
+        salary_net: document.getElementById('edit-salary-net').value
+    };
+    
+    fetch(`${apiBase}/employees/${employeeId}`, {
+        method: 'PUT',
+        headers: {
+            'Content-Type': 'application/json',
+            'Accept': 'application/json',
+            'X-CSRF-TOKEN': csrfToken
+        },
+        credentials: 'include',
+        body: JSON.stringify(employeeData)
+    })
+    .then(response => {
+        if (!response.ok) {
+            return response.json().then(err => {
+                throw new Error(err.message || 'Failed to update employee');
+            });
+        }
+        return response.json();
+    })
+    .then(data => {
+        showNotification('Employee updated successfully');
+        closeModal('edit-employee-modal');
+        loadSection('employees');
+    })
+    .catch(error => {
+        document.getElementById('edit-employee-error').textContent = error.message;
+        document.getElementById('edit-employee-error').style.display = 'block';
+    });
+}
+
+// Loan Type Management
+function renderLoanTypes(loanTypes) {
+    return `
+        <div class="loan-types-container">
+            <div class="section-header">
+                <h2>Loan Type Management</h2>
+                <button class="action-btn" onclick="showCreateLoanTypeModal()">Create Loan Type</button>
+            </div>
+            
+            <div class="loan-types-list">
+                ${loanTypes && loanTypes.length ? 
+                    loanTypes.map(loanType => `
+                        <div class="loan-type-card" data-loan-type-id="${loanType.loan_type_id}">
+                            <div class="loan-type-info">
+                                <h3>${loanType.name}</h3>
+                                <p class="description">${loanType.description || 'No description'}</p>
+                                <div class="loan-type-details">
+                                    <p>Interest Rate: <strong>${loanType.interest_rate}%</strong></p>
+                                    <p>Maximum Amount: <strong>$${parseFloat(loanType.max_amount).toFixed(2)}</strong></p>
+                                    <p>Maximum Term: <strong>${loanType.max_term} months</strong></p>
+                                </div>
+                            </div>
+                            <div class="loan-type-actions">
+                                <button class="action-btn" onclick="showEditLoanTypeModal(${loanType.loan_type_id})">Edit</button>
+                            </div>
+                        </div>
+                    `).join('') : 
+                    '<p class="no-data">No loan types found</p>'
+                }
+            </div>
+        </div>
+    `;
+}
+
+function initLoanTypeEventListeners() {
+    // Add any event listeners for loan type section
+}
+
+function showCreateLoanTypeModal() {
+    const modalHTML = `
+        <div class="modal-overlay" id="create-loan-type-modal">
+            <div class="modal-content">
+                <h2>Create New Loan Type</h2>
+                <div id="create-loan-type-error" class="error-message" style="display: none;"></div>
+                
+                <div class="form-group">
+                    <label for="loan-type-name">Name*:</label>
+                    <input type="text" id="loan-type-name" required>
+                </div>
+                
+                <div class="form-group">
+                    <label for="loan-type-description">Description:</label>
+                    <textarea id="loan-type-description" rows="3"></textarea>
+                </div>
+                
+                <div class="form-group">
+                    <label for="loan-type-interest">Interest Rate (%)*:</label>
+                    <input type="number" id="loan-type-interest" step="0.01" min="0" max="100" required>
+                </div>
+                
+                <div class="form-group">
+                    <label for="loan-type-max-amount">Maximum Amount ($)*:</label>
+                    <input type="number" id="loan-type-max-amount" step="0.01" min="0" required>
+                </div>
+                
+                <div class="form-group">
+                    <label for="loan-type-max-term">Maximum Term (months)*:</label>
+                    <input type="number" id="loan-type-max-term" min="1" required>
+                </div>
+                
+                <div class="modal-actions">
+                    <button class="action-btn primary" onclick="createLoanType()">Create Loan Type</button>
+                    <button class="cancel-btn" onclick="closeModal('create-loan-type-modal')">Cancel</button>
+                </div>
+            </div>
+        </div>
+    `;
+    
+    document.body.insertAdjacentHTML('beforeend', modalHTML);
+}
+
+function createLoanType() {
+    const loanTypeData = {
+        name: document.getElementById('loan-type-name').value,
+        description: document.getElementById('loan-type-description').value,
+        interest_rate: document.getElementById('loan-type-interest').value,
+        max_amount: document.getElementById('loan-type-max-amount').value,
+        max_term: document.getElementById('loan-type-max-term').value
+    };
+    
+    fetch(`${apiBase}/loan-types`, {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+            'Accept': 'application/json',
+            'X-CSRF-TOKEN': csrfToken
+        },
+        credentials: 'include',
+        body: JSON.stringify(loanTypeData)
+    })
+    .then(response => {
+        if (!response.ok) {
+            return response.json().then(err => {
+                throw new Error(err.message || 'Failed to create loan type');
+            });
+        }
+        return response.json();
+    })
+    .then(data => {
+        showNotification('Loan type created successfully');
+        closeModal('create-loan-type-modal');
+        loadSection('loan-types');
+    })
+    .catch(error => {
+        document.getElementById('create-loan-type-error').textContent = error.message;
+        document.getElementById('create-loan-type-error').style.display = 'block';
+    });
+}
+
+function showEditLoanTypeModal(loanTypeId) {
+    fetch(`${apiBase}/loan-types/${loanTypeId}`, {
+        headers: {
+            'Accept': 'application/json',
+            'X-CSRF-TOKEN': csrfToken
+        },
+        credentials: 'include'
+    })
+    .then(response => response.json())
+    .then(loanType => {
+        const modalHTML = `
+            <div class="modal-overlay" id="edit-loan-type-modal">
+                <div class="modal-content">
+                    <h2>Edit Loan Type</h2>
+                    <div id="edit-loan-type-error" class="error-message" style="display: none;"></div>
+                    
+                    <div class="form-group">
+                        <label for="edit-loan-type-name">Name*:</label>
+                        <input type="text" id="edit-loan-type-name" value="${loanType.name}" required>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="edit-loan-type-description">Description:</label>
+                        <textarea id="edit-loan-type-description" rows="3">${loanType.description || ''}</textarea>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="edit-loan-type-interest">Interest Rate (%)*:</label>
+                        <input type="number" id="edit-loan-type-interest" step="0.01" min="0" max="100" value="${loanType.interest_rate}" required>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="edit-loan-type-max-amount">Maximum Amount ($)*:</label>
+                        <input type="number" id="edit-loan-type-max-amount" step="0.01" min="0" value="${loanType.max_amount}" required>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="edit-loan-type-max-term">Maximum Term (months)*:</label>
+                        <input type="number" id="edit-loan-type-max-term" min="1" value="${loanType.max_term}" required>
+                    </div>
+                    
+                    <div class="modal-actions">
+                        <button class="action-btn primary" onclick="updateLoanType(${loanType.loan_type_id})">Update Loan Type</button>
+                        <button class="cancel-btn" onclick="closeModal('edit-loan-type-modal')">Cancel</button>
+                    </div>
+                </div>
+            </div>
+        `;
+        
+        document.body.insertAdjacentHTML('beforeend', modalHTML);
+    })
+    .catch(error => {
+        showNotification('Error loading loan type details: ' + error.message, 'error');
+    });
+}
+
+function updateLoanType(loanTypeId) {
+    const loanTypeData = {
+        name: document.getElementById('edit-loan-type-name').value,
+        description: document.getElementById('edit-loan-type-description').value,
+        interest_rate: document.getElementById('edit-loan-type-interest').value,
+        max_amount: document.getElementById('edit-loan-type-max-amount').value,
+        max_term: document.getElementById('edit-loan-type-max-term').value
+    };
+    
+    fetch(`${apiBase}/loan-types/${loanTypeId}`, {
+        method: 'PUT',
+        headers: {
+            'Content-Type': 'application/json',
+            'Accept': 'application/json',
+            'X-CSRF-TOKEN': csrfToken
+        },
+        credentials: 'include',
+        body: JSON.stringify(loanTypeData)
+    })
+    .then(response => {
+        if (!response.ok) {
+            return response.json().then(err => {
+                throw new Error(err.message || 'Failed to update loan type');
+            });
+        }
+        return response.json();
+    })
+    .then(data => {
+        showNotification('Loan type updated successfully');
+        closeModal('edit-loan-type-modal');
+        loadSection('loan-types');
+    })
+    .catch(error => {
+        document.getElementById('edit-loan-type-error').textContent = error.message;
+        document.getElementById('edit-loan-type-error').style.display = 'block';
+    });
+}// Branch Management
+function renderBranches(branches) {
+    return `
+        <div class="branches-container">
+            <div class="section-header">
+                <h2>Branch Management</h2>
+                <button class="action-btn" onclick="showCreateBranchModal()">Create Branch</button>
+            </div>
+            
+            <div class="branches-list">
+                ${branches && branches.length ? 
+                    branches.map(branch => `
+                        <div class="branch-card" data-branch-id="${branch.branch_id}">
+                            <div class="branch-info">
+                                <h3>${branch.branch_name}</h3>
+                                <p>Location: ${branch.location}</p>
+                                <p>Branch Code: ${branch.branch_code || 'N/A'}</p>
+                            </div>
+                            <div class="branch-actions">
+                                <button class="action-btn" onclick="showEditBranchModal(${branch.branch_id})">Edit</button>
+                            </div>
+                        </div>
+                    `).join('') : 
+                    '<p class="no-data">No branches found</p>'
+                }
+            </div>
+        </div>
+    `;
+}
+
+function initBranchEventListeners() {
+    // Add any event listeners for branch section
+}
+
+function showCreateBranchModal() {
+    const modalHTML = `
+        <div class="modal-overlay" id="create-branch-modal">
+            <div class="modal-content">
+                <h2>Create New Branch</h2>
+                <div id="create-branch-error" class="error-message" style="display: none;"></div>
+                
+                <div class="form-group">
+                    <label for="branch-name">Branch Name*:</label>
+                    <input type="text" id="branch-name" required>
+                </div>
+                
+                <div class="form-group">
+                    <label for="branch-location">Location*:</label>
+                    <input type="text" id="branch-location" required>
+                </div>
+                
+                <div class="form-group">
+                    <label for="branch-code">Branch Code:</label>
+                    <input type="text" id="branch-code">
+                </div>
+                
+                <div class="modal-actions">
+                    <button class="action-btn primary" onclick="createBranch()">Create Branch</button>
+                    <button class="cancel-btn" onclick="closeModal('create-branch-modal')">Cancel</button>
+                </div>
+            </div>
+        </div>
+    `;
+    
+    document.body.insertAdjacentHTML('beforeend', modalHTML);
+}
+
+function createBranch() {
+    const branchData = {
+        branch_name: document.getElementById('branch-name').value,
+        location: document.getElementById('branch-location').value,
+        branch_code: document.getElementById('branch-code').value
+    };
+    
+    fetch(`${apiBase}/branches`, {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+            'Accept': 'application/json',
+            'X-CSRF-TOKEN': csrfToken
+        },
+        credentials: 'include',
+        body: JSON.stringify(branchData)
+    })
+    .then(response => {
+        if (!response.ok) {
+            return response.json().then(err => {
+                throw new Error(err.message || 'Failed to create branch');
+            });
+        }
+        return response.json();
+    })
+    .then(data => {
+        showNotification('Branch created successfully');
+        closeModal('create-branch-modal');
+        loadSection('branches');
+    })
+    .catch(error => {
+        document.getElementById('create-branch-error').textContent = error.message;
+        document.getElementById('create-branch-error').style.display = 'block';
+    });
+}
+
+function showEditBranchModal(branchId) {
+    fetch(`${apiBase}/branches/${branchId}`, {
+        headers: {
+            'Accept': 'application/json',
+            'X-CSRF-TOKEN': csrfToken
+        },
+        credentials: 'include'
+    })
+    .then(response => response.json())
+    .then(branch => {
+        const modalHTML = `
+            <div class="modal-overlay" id="edit-branch-modal">
+                <div class="modal-content">
+                    <h2>Edit Branch</h2>
+                    <div id="edit-branch-error" class="error-message" style="display: none;"></div>
+                    
+                    <div class="form-group">
+                        <label for="edit-branch-name">Branch Name*:</label>
+                        <input type="text" id="edit-branch-name" value="${branch.branch_name}" required>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="edit-branch-location">Location*:</label>
+                        <input type="text" id="edit-branch-location" value="${branch.location}" required>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="edit-branch-code">Branch Code:</label>
+                        <input type="text" id="edit-branch-code" value="${branch.branch_code || ''}">
+                    </div>
+                    
+                    <div class="modal-actions">
+                        <button class="action-btn primary" onclick="updateBranch(${branch.branch_id})">Update Branch</button>
+                        <button class="cancel-btn" onclick="closeModal('edit-branch-modal')">Cancel</button>
+                    </div>
+                </div>
+            </div>
+        `;
+        
+        document.body.insertAdjacentHTML('beforeend', modalHTML);
+    })
+    .catch(error => {
+        showNotification('Error loading branch details: ' + error.message, 'error');
+    });
+}
+
+function updateBranch(branchId) {
+    const branchData = {
+        branch_name: document.getElementById('edit-branch-name').value,
+        location: document.getElementById('edit-branch-location').value,
+        branch_code: document.getElementById('edit-branch-code').value
+    };
+    
+    fetch(`${apiBase}/branches/${branchId}`, {
+        method: 'PUT',
+        headers: {
+            'Content-Type': 'application/json',
+            'Accept': 'application/json',
+            'X-CSRF-TOKEN': csrfToken
+        },
+        credentials: 'include',
+        body: JSON.stringify(branchData)
+    })
+    .then(response => {
+        if (!response.ok) {
+            return response.json().then(err => {
+                throw new Error(err.message || 'Failed to update branch');
+            });
+        }
+        return response.json();
+    })
+    .then(data => {
+        showNotification('Branch updated successfully');
+        closeModal('edit-branch-modal');
+        loadSection('branches');
+    })
+    .catch(error => {
+        document.getElementById('edit-branch-error').textContent = error.message;
+        document.getElementById('edit-branch-error').style.display = 'block';
+    });
+}
+
+// System Configuration
+function renderSystemConfig(data) {
+    return `
+        <div class="system-config-container">
+            <h2>System Configuration</h2>
+            
+            <div class="config-sections">
+                <div class="config-section">
+                    <h3>Loan Types</h3>
+                    <p>Total Loan Types: ${data.loan_types.length}</p>
+                    <button class="action-btn" onclick="loadSection('loan-types')">Manage Loan Types</button>
+                </div>
+                
+                <div class="config-section">
+                    <h3>Branches</h3>
+                    <p>Total Branches: ${data.branches.length}</p>
+                    <button class="action-btn" onclick="loadSection('branches')">Manage Branches</button>
+                </div>
+                
+                <div class="config-section">
+                    <h3>User Roles</h3>
+                    <ul class="role-list">
+                        ${data.user_roles.map(role => `<li>${role}</li>`).join('')}
+                    </ul>
+                    <button class="action-btn" onclick="loadSection('users')">Manage Users</button>
+                </div>
+            </div>
+        </div>
+    `;
+}
+
+// Audit Logs
+function renderAuditLogs(logs) {
+    return `
+        <div class="audit-logs-container">
+            <h2>System Audit Logs</h2>
+            
+            <div class="audit-filters">
+                <div class="filter-group">
+                    <label for="action-type-filter">Action Type:</label>
+                    <select id="action-type-filter">
+                        <option value="">All Actions</option>
+                        <!-- Will be populated by AJAX -->
+                    </select>
+                </div>
+                
+                <div class="filter-group">
+                    <label for="entity-type-filter">Entity Type:</label>
+                    <select id="entity-type-filter">
+                        <option value="">All Entities</option>
+                        <!-- Will be populated by AJAX -->
+                    </select>
+                </div>
+                
+                <div class="filter-group">
+                    <label for="start-date-filter">Start Date:</label>
+                    <input type="date" id="start-date-filter">
+                </div>
+                
+                <div class="filter-group">
+                    <label for="end-date-filter">End Date:</label>
+                    <input type="date" id="end-date-filter">
+                </div>
+                
+                <div class="filter-group">
+                    <button class="action-btn" onclick="applyAuditLogFilters()">Apply Filters</button>
+                    <button class="action-btn secondary" onclick="clearAuditLogFilters()">Clear</button>
+                </div>
+            </div>
+            
+            <div class="audit-logs-list">
+                <table class="audit-table">
+                    <thead>
+                        <tr>
+                            <th>Date & Time</th>
+                            <th>User</th>
+                            <th>Action</th>
+                            <th>Entity</th>
+                            <th>Description</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        ${logs.data && logs.data.length ? 
+                            logs.data.map(log => `
+                                <tr>
+                                    <td>${new Date(log.created_at).toLocaleString()}</td>
+                                    <td>${log.user_id || 'System'}</td>
+                                    <td>${log.action_type}</td>
+                                    <td>${log.entity_type || 'N/A'}</td>
+                                    <td>${log.description}</td>
+                                </tr>
+                            `).join('') : 
+                            '<tr><td colspan="5" class="no-data">No audit logs found</td></tr>'
+                        }
+                    </tbody>
+                </table>
+            </div>
+            
+            ${renderPagination(logs)}
+        </div>
+    `;
+}
+
+function initAuditLogFilters() {
+    // Fetch action types
+    fetch(`${apiBase}/audit-logs/action-types`, {
+        headers: {
+            'Accept': 'application/json',
+            'X-CSRF-TOKEN': csrfToken
+        },
+        credentials: 'include'
+    })
+    .then(response => response.json())
+    .then(actionTypes => {
+        const actionTypeSelect = document.getElementById('action-type-filter');
+        if (actionTypeSelect) {
+            actionTypes.forEach(type => {
+                const option = document.createElement('option');
+                option.value = type;
+                option.textContent = type;
+                actionTypeSelect.appendChild(option);
+            });
+        }
+    })
+    .catch(error => {
+        console.error('Error loading action types:', error);
+    });
+    
+    // Fetch entity types
+    fetch(`${apiBase}/audit-logs/entity-types`, {
+        headers: {
+            'Accept': 'application/json',
+            'X-CSRF-TOKEN': csrfToken
+        },
+        credentials: 'include'
+    })
+    .then(response => response.json())
+    .then(entityTypes => {
+        const entityTypeSelect = document.getElementById('entity-type-filter');
+        if (entityTypeSelect) {
+            entityTypes.forEach(type => {
+                const option = document.createElement('option');
+                option.value = type;
+                option.textContent = type;
+                entityTypeSelect.appendChild(option);
+            });
+        }
+    })
+    .catch(error => {
+        console.error('Error loading entity types:', error);
+    });
+}
+
+function applyAuditLogFilters() {
+    const actionType = document.getElementById('action-type-filter')?.value;
+    const entityType = document.getElementById('entity-type-filter')?.value;
+    const startDate = document.getElementById('start-date-filter')?.value;
+    const endDate = document.getElementById('end-date-filter')?.value;
+    
+    const params = new URLSearchParams();
+    if (actionType) params.append('action_type', actionType);
+    if (entityType) params.append('entity_type', entityType);
+    if (startDate) params.append('start_date', startDate);
+    if (endDate) params.append('end_date', endDate);
+    
+    fetch(`${apiBase}/audit-logs?${params.toString()}`, {
+        headers: {
+            'Accept': 'application/json',
+            'X-CSRF-TOKEN': csrfToken
+        },
+        credentials: 'include'
+    })
+    .then(response => response.json())
+    .then(data => {
+        const container = document.getElementById('content-container');
+        container.innerHTML = renderAuditLogs(data);
+        initAuditLogFilters();
+    })
+    .catch(error => {
+        showNotification('Error loading audit logs: ' + error.message, 'error');
+    });
+}
+
+function clearAuditLogFilters() {
+    document.getElementById('action-type-filter').value = '';
+    document.getElementById('entity-type-filter').value = '';
+    document.getElementById('start-date-filter').value = '';
+    document.getElementById('end-date-filter').value = '';
+    loadSection('audit-logs');
+}
+
+// Utility functions
+function closeModal(modalId) {
+    const modal = document.getElementById(modalId);
+    if (modal) modal.remove();
+}
+
+
+       
         // API Client
         const apiClient = {
             get: async (url) => {
@@ -711,7 +1425,7 @@
             }
         };
 
-        // UI Functions
+        // UI Functions consider adding to the centralised admin-hr.js
         function showNotification(message, type = 'success') {
             const notification = document.createElement('div');
             notification.className = `notification ${type}`;
@@ -727,11 +1441,14 @@
         async function loadSection(section) {
             const params = new URLSearchParams();
             const sectionMap = {
-        'loan-applications': 'loans',
-        'loans': 'loans',
         'users': 'users',
         'employees': 'employees',
-        'reports': 'reports'
+        'reports': 'reports',
+         'loan-types': 'loan-types',
+        'branches': 'branches',
+        'system-config': 'system-config',
+        'audit-logs': 'audit-logs',
+        'dashboard': 'dashboard'
     };
 
                 const mappedSection = sectionMap[section] || section;
@@ -757,10 +1474,14 @@
     try {
         toggleLoading(true);
         const endpoint = {
-            'loans': '/loan-applications', 
             'users': '/users',
             'employees': '/employees',
-            'reports': '/reports'
+            'reports': '/reports',
+            'loan-types': '/loan-types',
+            'branches': '/branches',
+            'system-config': '/system-config',
+            'audit-logs': '/audit-logs',
+            'dashboard': ''
         }[mappedSection] || `/${mappedSection}`;
 
         fetch(`${apiBase}${endpoint}?${params.toString()}`, {
@@ -793,141 +1514,49 @@
     const container = document.getElementById('content-container');
     
     switch(section) {
+        case 'dashboard':
+            container.innerHTML = renderAdminDashboard(data);
+            break;
         case 'loans':
             container.innerHTML = renderLoans(data);
             break;
         case 'users':
             container.innerHTML = renderUsers(data);
+            initUserEventListeners();
             break;
         case 'employees':
             container.innerHTML = renderEmployees(data);
+            initEmployeeEventListeners();
             break;
         case 'reports':
             container.innerHTML = renderReports(data);
+            break;
+        case 'loan-types':
+            container.innerHTML = renderLoanTypes(data);
+            initLoanTypeEventListeners();
+            break;
+        case 'branches':
+            container.innerHTML = renderBranches(data);
+            initBranchEventListeners();
+            break;
+        case 'system-config':
+            container.innerHTML = renderSystemConfig(data);
+            break;
+        case 'audit-logs':
+            container.innerHTML = renderAuditLogs(data);
+            initAuditLogFilters();
             break;
         default:
             container.innerHTML = `<div>Unknown section: ${section}</div>`;
     }
 }
 
-        function renderLoans(loans) {
-    if (!loans || !loans.data || !Array.isArray(loans.data)) {
-        return `<div class="error-message">No loan data available</div>`;
-    }
-    
-    return `
-        <div class="filters">
-            <select id="statusFilter" onchange="loadSection('loans')">
-                <option value="">All Statuses</option>
-                <option value="Pending">Pending</option>
-                <option value="Approved">Approved</option>
-                <option value="Rejected">Rejected</option>
-            </select>
-            <input type="date" id="fromDate" onchange="loadSection('loans')">
-            <input type="date" id="toDate" onchange="loadSection('loans')">
-        </div>
-        <h2>Loan Applications</h2>
-        <div class="loan-list">
-            ${loans.data.map(loan => `
-                <div class="loan-item">
-                    <div class="loan-header">
-                        <h3>${loan.employee && loan.employee.full_name ? loan.employee.full_name : 'Unknown Employee'} - 
-                            ${loan.loan_type && loan.loan_type.name ? loan.loan_type.name : 'Unknown Loan Type'}</h3>
-                        <span class="status ${loan.status ? loan.status.toLowerCase() : ''}">${loan.status || 'Unknown'}</span>
-                    </div>
-                    <div class="loan-details">
-                        <p>Amount: $${loan.amount || 0} | Term: ${loan.term_months || 0} months</p>
-                        <p>Applied: ${loan.application_date ? new Date(loan.application_date).toLocaleDateString() : 'Unknown'}</p>
-                        ${loan.processed_date ? 
-                            `<p>Processed: ${new Date(loan.processed_date).toLocaleDateString()} by 
-                            ${loan.processed_by && loan.processed_by.full_name ? loan.processed_by.full_name : 'System'}</p>` : ''}
-                    </div>
-                    ${loan.status === 'Pending' ? `
-                        <div class="hr-actions">
-                            <button onclick="showReviewModal(${loan.loan_id})">Review</button>
-                        </div>
-                    ` : ''}
-                    ${loan.review_notes ? `
-                        <div class="review-notes">
-                            <h4>Review Notes:</h4>
-                            <p>${loan.review_notes}</p>
-                        </div>
-                    ` : ''}
-                </div>
-            `).join('')}
-        </div>
-        ${renderPagination(loans)}
-    `;
-}
-function showReviewModal(loanId) {
-    // Use a more flexible API endpoint
-    const endpoints = [
-        `/api/hr/loan-applications/${loanId}`,
-        `/api/hr/loans/${loanId}`
-    ];
-
-    function tryNextEndpoint(index) {
-        if (index >= endpoints.length) {
-            showNotification('Failed to load loan details', 'error');
-            return;
-        }
-
-        fetch(endpoints[index], {
-            headers: {
-                'Accept': 'application/json',
-                'X-CSRF-TOKEN': csrfToken
-            },
-            credentials: 'include'
-        })
-        .then(response => {
-            if (!response.ok) {
-                throw new Error(`HTTP error! status: ${response.status}`);
-            }
-            return response.json();
-        })
-        .then(loan => {
-            // Create modal HTML (your existing code)
-            const modalHTML = `
-                <div class="modal-overlay" id="review-modal">
-                    <div class="modal-content">
-                        <h2>Review Loan Application</h2>
-                        <p>Employee: ${loan.employee ? loan.employee.full_name : 'Unknown'}</p>
-                        <p>Loan Type: ${loan.loan_type ? loan.loan_type.name : 'Unknown'}</p>
-                        <p>Amount: $${loan.amount || 0}</p>
-                        <p>Term: ${loan.term_months || 0} months</p>
-                        <p>Purpose: ${loan.purpose || 'Not specified'}</p>
-                        
-                        <div class="form-group">
-                            <label for="review-notes">Review Notes:</label>
-                            <textarea id="review-notes" rows="4"></textarea>
-                        </div>
-                        
-                        <div class="modal-actions">
-                            <button class="approve-btn" onclick="processLoan(${loan.loan_id}, 'Approved')">Approve</button>
-                            <button class="reject-btn" onclick="processLoan(${loan.loan_id}, 'Rejected')">Reject</button>
-                            <button class="cancel-btn" onclick="closeReviewModal()">Cancel</button>
-                        </div>
-                    </div>
-                </div>
-            `;
-            
-            document.body.insertAdjacentHTML('beforeend', modalHTML);
-        })
-        .catch(error => {
-            console.error('Error fetching loan details:', error);
-            tryNextEndpoint(index + 1);
-        });
-    }
-
-    tryNextEndpoint(0);
-}
-
+      
 // Modify initialization to handle multiple section names
 document.addEventListener('DOMContentLoaded', () => {
     renderSidebar();
 
     const sectionByRole = {
-        'hr': 'loans',
         'admin': 'users',
     };
     
@@ -945,49 +1574,368 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     }, 300000); // 5 minutes
 });
-function closeReviewModal() {
-    const modal = document.getElementById('review-modal');
-    if (modal) modal.remove();
+
+
+function renderUsers(users) {
+    return `
+        <div class="users-container">
+            <div class="section-header">
+                <h2>User Management</h2>
+                <button class="action-btn" onclick="showCreateUserModal()">Create User</button>
+            </div>
+            
+            <div class="filters">
+                <div class="filter-group">
+                    <label for="role-filter">Role:</label>
+                    <select id="role-filter" onchange="applyUserFilters()">
+                        <option value="">All Roles</option>
+                        <option value="admin">Admin</option>
+                        <option value="hr">HR</option>
+                        <option value="employee">Employee</option>
+                    </select>
+                </div>
+                
+                <div class="filter-group">
+                    <label for="status-filter">Status:</label>
+                    <select id="status-filter" onchange="applyUserFilters()">
+                        <option value="">All Statuses</option>
+                        <option value="1">Active</option>
+                        <option value="0">Inactive</option>
+                    </select>
+                </div>
+                
+                <div class="filter-group">
+                    <label for="user-search">Search:</label>
+                    <input type="text" id="user-search" placeholder="Search users..." onkeyup="handleUserSearch(event)">
+                </div>
+            </div>
+            
+            <div class="users-list">
+                ${users.data && users.data.length ? 
+                    users.data.map(user => `
+                        <div class="user-card" data-user-id="${user.user_id}">
+                            <div class="user-info">
+                                <h3>${user.username}</h3>
+                                <p class="employee-name">${user.employee && user.employee.full_name ? user.employee.full_name : 'No Employee'}</p>
+                                <p>Role: <span class="user-role">${user.role}</span></p>
+                                <p>Status: <span class="status ${user.is_active ? 'approved' : 'rejected'}">${user.is_active ? 'Active' : 'Inactive'}</span></p>
+                                <p>Last Login: ${user.last_login ? new Date(user.last_login).toLocaleString() : 'Never'}</p>
+                            </div>
+                            <div class="user-actions">
+                                <button class="action-btn" onclick="showEditUserModal(${user.user_id})">Edit Role</button>
+                                <button class="action-btn" onclick="toggleUserStatus(${user.user_id}, ${!user.is_active})">${user.is_active ? 'Disable' : 'Enable'}</button>
+                                <button class="action-btn" onclick="resetUserPassword(${user.user_id})">Reset Password</button>
+                            </div>
+                        </div>
+                    `).join('') : 
+                    '<p class="no-data">No users found</p>'
+                }
+            </div>
+            
+            ${renderPagination(users)}
+        </div>
+    `;
 }
-function processLoan(loanId, status) {
-    const notes = document.getElementById('review-notes').value;
+
+function initUserEventListeners() {
+    document.getElementById('user-search')?.addEventListener('keypress', function(e) {
+        if (e.key === 'Enter') {
+            applyUserFilters();
+        }
+    });
+}
+
+function applyUserFilters() {
+    const roleFilter = document.getElementById('role-filter')?.value;
+    const statusFilter = document.getElementById('status-filter')?.value;
+    const searchTerm = document.getElementById('user-search')?.value;
     
-    apiClient.put(`/loan-applications/${loanId}`, {
-        status: status,
-        review_notes: notes
+    const params = new URLSearchParams();
+    if (roleFilter) params.append('role', roleFilter);
+    if (statusFilter !== '') params.append('is_active', statusFilter);
+    if (searchTerm) params.append('search', searchTerm);
+    
+    fetch(`${apiBase}/users?${params.toString()}`, {
+        headers: {
+            'Accept': 'application/json',
+            'X-CSRF-TOKEN': csrfToken
+        },
+        credentials: 'include'
+    })
+    .then(response => response.json())
+    .then(data => {
+        const container = document.getElementById('content-container');
+        container.innerHTML = renderUsers(data);
+        initUserEventListeners();
+    })
+    .catch(error => {
+        showNotification('Error loading users: ' + error.message, 'error');
+    });
+}
+
+function handleUserSearch(event) {
+    if (event.key === 'Enter') {
+        applyUserFilters();
+    }
+}
+
+function showCreateUserModal() {
+    // First, fetch employees to populate the dropdown
+    fetch(`${apiBase}/employees`, {
+        headers: {
+            'Accept': 'application/json',
+            'X-CSRF-TOKEN': csrfToken
+        },
+        credentials: 'include'
+    })
+    .then(response => response.json())
+    .then(data => {
+        const employees = data.data || [];
+        
+        const modalHTML = `
+            <div class="modal-overlay" id="create-user-modal">
+                <div class="modal-content">
+                    <h2>Create New User</h2>
+                    <div id="create-user-error" class="error-message" style="display: none;"></div>
+                    
+                    <div class="form-group">
+                        <label for="employee-select">Employee:</label>
+                        <select id="employee-select" required>
+                            <option value="">Select Employee</option>
+                            ${employees.map(emp => `
+                                <option value="${emp.employee_id}">${emp.full_name} (${emp.employee_id})</option>
+                            `).join('')}
+                        </select>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="username-input">Username:</label>
+                        <input type="text" id="username-input" required>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="role-select">Role:</label>
+                        <select id="role-select" required>
+                            <option value="employee">Employee</option>
+                            <option value="hr">HR</option>
+                            <option value="admin">Admin</option>
+                        </select>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="password-input">Password:</label>
+                        <input type="password" id="password-input" placeholder="Leave blank for default password">
+                    </div>
+                    
+                    <div class="form-group">
+                        <label>
+                            <input type="checkbox" id="active-checkbox" checked>
+                            Active
+                        </label>
+                    </div>
+                    
+                    <div class="modal-actions">
+                        <button class="action-btn primary" onclick="createUser()">Create User</button>
+                        <button class="cancel-btn" onclick="closeModal('create-user-modal')">Cancel</button>
+                    </div>
+                </div>
+            </div>
+        `;
+        
+        document.body.insertAdjacentHTML('beforeend', modalHTML);
+    })
+    .catch(error => {
+        showNotification('Error loading employees: ' + error.message, 'error');
+    });
+}
+
+function createUser() {
+    const employeeId = document.getElementById('employee-select').value.toString();
+
+    const username = document.getElementById('username-input').value;
+    const role = document.getElementById('role-select').value;
+    const password = document.getElementById('password-input').value;
+    const isActive = document.getElementById('active-checkbox').checked;
+    
+    if (!employeeId || !username || !role) {
+        const errorDiv = document.getElementById('create-user-error');
+        errorDiv.textContent = 'Please fill all required fields.';
+        errorDiv.style.display = 'block';
+        return;
+    }
+    
+    const userData = {
+        employee_id: employeeId,
+        username: username,
+        role: role,
+        is_active: isActive
+    };
+    
+    if (password) {
+        userData.password = password;
+    }
+    
+    fetch(`${apiBase}/users`, {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+            'Accept': 'application/json',
+            'X-CSRF-TOKEN': csrfToken
+        },
+        credentials: 'include',
+        body: JSON.stringify(userData)
     })
     .then(response => {
-        if (!response.ok) throw new Error('Failed to update loan');
+        if (!response.ok) {
+            return response.json().then(err => {
+                throw new Error(err.message || 'Failed to create user');
+            });
+        }
         return response.json();
     })
     .then(data => {
-        showNotification(`Loan application ${status.toLowerCase()} successfully`);
-        closeReviewModal();
-        loadSection('loans');
+        showNotification('User created successfully');
+        closeModal('create-user-modal');
+        loadSection('users');
+    })
+    .catch(error => {
+        document.getElementById('create-user-error').textContent = error.message;
+        document.getElementById('create-user-error').style.display = 'block';
+    });
+}
+
+function showEditUserModal(userId) {
+    // Fetch user details first
+    fetch(`${apiBase}/users/${userId}`, {
+        headers: {
+            'Accept': 'application/json',
+            'X-CSRF-TOKEN': csrfToken
+        },
+        credentials: 'include'
+    })
+    .then(response => response.json())
+    .then(user => {
+        const modalHTML = `
+            <div class="modal-overlay" id="edit-user-modal">
+                <div class="modal-content">
+                    <h2>Edit User Role</h2>
+                    <div id="edit-user-error" class="error-message" style="display: none;"></div>
+                    
+                    <p>Username: ${user.username}</p>
+                    <p>Employee: ${user.employee ? user.employee.full_name : 'N/A'}</p>
+                    
+                    <div class="form-group">
+                        <label for="edit-role-select">Role:</label>
+                        <select id="edit-role-select">
+                            <option value="employee" ${user.role === 'employee' ? 'selected' : ''}>Employee</option>
+                            <option value="hr" ${user.role === 'hr' ? 'selected' : ''}>HR</option>
+                            <option value="admin" ${user.role === 'admin' ? 'selected' : ''}>Admin</option>
+                        </select>
+                    </div>
+                    
+                    <div class="modal-actions">
+                        <button class="action-btn primary" onclick="updateUserRole(${userId})">Update Role</button>
+                        <button class="cancel-btn" onclick="closeModal('edit-user-modal')">Cancel</button>
+                    </div>
+                </div>
+            </div>
+        `;
+        
+        document.body.insertAdjacentHTML('beforeend', modalHTML);
+    })
+    .catch(error => {
+        showNotification('Error loading user details: ' + error.message, 'error');
+    });
+}
+
+function updateUserRole(userId) {
+    const role = document.getElementById('edit-role-select').value;
+    
+    fetch(`${apiBase}/users/${userId}/role`, {
+        method: 'PUT',
+        headers: {
+            'Content-Type': 'application/json',
+            'Accept': 'application/json',
+            'X-CSRF-TOKEN': csrfToken
+        },
+        credentials: 'include',
+        body: JSON.stringify({ role })
+    })
+    .then(response => {
+        if (!response.ok) {
+            return response.json().then(err => {
+                throw new Error(err.message || 'Failed to update user role');
+            });
+        }
+        return response.json();
+    })
+    .then(data => {
+        showNotification('User role updated successfully');
+        closeModal('edit-user-modal');
+        loadSection('users');
+    })
+    .catch(error => {
+        document.getElementById('edit-user-error').textContent = error.message;
+        document.getElementById('edit-user-error').style.display = 'block';
+    });
+}
+
+function toggleUserStatus(userId, newStatus) {
+    fetch(`${apiBase}/users/${userId}/status`, {
+        method: 'PUT',
+        headers: {
+            'Content-Type': 'application/json',
+            'Accept': 'application/json',
+            'X-CSRF-TOKEN': csrfToken
+        },
+        credentials: 'include',
+        body: JSON.stringify({ is_active: newStatus })
+    })
+    .then(response => {
+        if (!response.ok) {
+            return response.json().then(err => {
+                throw new Error(err.message || 'Failed to update user status');
+            });
+        }
+        return response.json();
+    })
+    .then(data => {
+        showNotification(`User ${newStatus ? 'enabled' : 'disabled'} successfully`);
+        loadSection('users');
     })
     .catch(error => {
         showNotification(error.message, 'error');
     });
 }
 
+function resetUserPassword(userId) {
+    if (confirm('Are you sure you want to reset this user\'s password?')) {
+        fetch(`${apiBase}/users/${userId}/reset-password`, {
+            method: 'POST',
+            headers: {
+                'Accept': 'application/json',
+                'X-CSRF-TOKEN': csrfToken
+            },
+            credentials: 'include'
+        })
+        .then(response => {
+            if (!response.ok) {
+                return response.json().then(err => {
+                    throw new Error(err.message || 'Failed to reset password');
+                });
+            }
+            return response.json();
+        })
+        .then(data => {
+            showNotification('Password reset successful. Temporary password: ' + data.temporary_password);
+        })
+        .catch(error => {
+            showNotification(error.message, 'error');
+        });
+    }
+}
 
-
-        function renderUsers(users) {
-            return `
-                <h2>System Users</h2>
-                <div class="users-list">
-                    ${users.data.map(user => `
-                        <div class="user-item">
-                            <h3>${user.username}</h3>
-                            <p>Email: ${user.email}</p>
-                            <p>Role: ${user.role}</p>
-                            <p>Status: <span class="status ${user.status.toLowerCase()}">${user.status}</span></p>
-                        </div>
-                    `).join('')}
-                </div>
-                ${renderPagination(users)}
-            `;
-        }
+       
 
         function loadReports() {
     toggleLoading(true);
@@ -1145,44 +2093,6 @@ async function fetchBranches() {
     }
 }
 
-async function fetchDetailedLoanData() {
-    try {
-        const params = new URLSearchParams();
-        const periodSelect = document.getElementById('period');
-        
-        if (periodSelect) {
-            const period = periodSelect.value;
-            params.append('period', period);
-            
-            if (period === 'custom') {
-                const startDate = document.getElementById('start-date').value;
-                const endDate = document.getElementById('end-date').value;
-                params.append('start_date', startDate);
-                params.append('end_date', endDate);
-            }
-            
-            const department = document.getElementById('department');
-            if (department && department.value) {
-                params.append('department', department.value);
-            }
-        }
-        
-        const response = await fetch(`/api/hr/loan-applications?${params.toString()}`, {
-            headers: {
-                'Accept': 'application/json',
-                'X-CSRF-TOKEN': csrfToken
-            },
-            credentials: 'include'
-        });
-        
-        if (!response.ok) throw new Error('Failed to fetch detailed loan data');
-        
-        const loansData = await response.json();
-        updateDetailedLoanTable(loansData.data);
-    } catch (error) {
-        console.error('Error fetching detailed loan data:', error);
-    }
-}
 
 async function fetchDetailedBranchData() {
     try {
@@ -1213,56 +2123,13 @@ async function fetchDetailedBranchData() {
             },
             credentials: 'include'
         });
-        
         if (!response.ok) throw new Error('Failed to fetch detailed branch data');
-        
         const branchData = await response.json();
         updateDetailedBranchTable(branchData);
-    } catch (error) {
+        } catch (error) {
         console.error('Error fetching detailed branch data:', error);
-    }
-}
-
-function updateDetailedLoanTable(loans) {
-    const tableBody = document.getElementById('loan-details');
-    if (!tableBody) return;
-    
-    if (!loans || !Array.isArray(loans) || loans.length === 0) {
-        tableBody.innerHTML = '<tr><td colspan="7" style="text-align: center;">No loan data found for the selected criteria</td></tr>';
-        return;
-    }
-    
-    let html = '';
-    loans.forEach(loan => {
-        const employeeName = loan.employee && loan.employee.full_name ? loan.employee.full_name : 'Unknown';
-        const department = loan.employee && loan.employee.department ? loan.employee.department : 'Unknown';
-        const loanType = loan.loan_type && loan.loan_type.name ? loan.loan_type.name : 'Unknown';
-        const amount = loan.amount ? `$${parseFloat(loan.amount).toFixed(2)}` : '$0';
-        const appliedDate = loan.application_date ? new Date(loan.application_date).toLocaleDateString() : 'Unknown';
-        const processedBy = loan.processed_by && loan.processed_by.full_name ? loan.processed_by.full_name : 'N/A';
-        
-        let statusClass = '';
-        switch(loan.status) {
-            case 'Approved': statusClass = 'status-approved'; break;
-            case 'Pending': statusClass = 'status-pending'; break;
-            case 'Rejected': statusClass = 'status-rejected'; break;
         }
-        
-        html += `
-            <tr data-loan-id="${loan.loan_id}" class="clickable" onclick="viewLoanDetails(${loan.loan_id})">
-                <td>${employeeName}</td>
-                <td>${department}</td>
-                <td>${loanType}</td>
-                <td>${amount}</td>
-                <td>${appliedDate}</td>
-                <td><span class="status-pill ${statusClass}">${loan.status || 'Unknown'}</span></td>
-                <td>${processedBy}</td>
-            </tr>
-        `;
-    });
-    
-    tableBody.innerHTML = html;
-}
+        }
 
 function updateDetailedBranchTable(branchData) {
     const tableBody = document.getElementById('branch-details');
@@ -1300,23 +2167,6 @@ function updateDetailedBranchTable(branchData) {
     });
     
     tableBody.innerHTML = html;
-}
-
-function calculatePerformance(branch) {
-    // Sample performance calculation
-    if (!branch.total_loans) return 0;
-    
-    const approvalRate = branch.total_loans ? (branch.approved_loans / branch.total_loans) * 100 : 0;
-    const processingSpeed = 100 - Math.min(100, (branch.avg_processing_days || 0) * 5);
-    
-    // Weight different factors
-    return Math.round((approvalRate * 0.6) + (processingSpeed * 0.4));
-}
-
-function getPerformanceClass(score) {
-    if (score >= 80) return 'status-approved';
-    if (score >= 50) return 'status-pending';
-    return 'status-rejected';
 }
 
 function formatCurrency(amount) {
@@ -1363,163 +2213,6 @@ function exportReportCSV() {
     document.body.removeChild(link);
 }
 
-function filterByDepartment(department) {
-    const departmentSelect = document.getElementById('department');
-    if (departmentSelect) {
-        departmentSelect.value = department;
-        refreshReports();
-    }
-}
-
-function filterByBranch(branchName) {
-    const branches = document.getElementById('branch');
-    if (!branches) return;
-    
-    for (let i = 0; i < branches.options.length; i++) {
-        if (branches.options[i].text === branchName) {
-            branches.value = branches.options[i].value;
-            refreshReports();
-            break;
-        }
-    }
-}
-
-function viewLoanDetails(loanId) {
-    // Instead of navigating away, we can show a modal or load details inline
-    showNotification(`Viewing details for loan #${loanId}`);
-}
-
-function viewBranchDetails(branchId) {
-    // Instead of navigating away, we can show a modal or load details inline
-    showNotification(`Viewing details for branch #${branchId}`);
-}
-
-function renderHrReports(data) {
-    return `
-        <div class="hr-reports-container">
-            <div class="reports-header">
-                <h2 class="reports-title">HR Loan Reports</h2>
-                <div class="reports-actions">
-                    <button class="btn-export" onclick="exportReportCSV()">Export CSV</button>
-                    <button class="btn-print" onclick="window.print()">Print Report</button>
-                </div>
-            </div>
-            
-            <div class="report-filters">
-                <div class="filter-group">
-                    <label for="period">Report Period</label>
-                    <select id="period" onchange="periodChanged()">
-                        <option value="monthly">Current Month</option>
-                        <option value="quarterly">Current Quarter</option>
-                        <option value="yearly">Current Year</option>
-                        <option value="custom">Custom Range</option>
-                    </select>
-                </div>
-                
-                <div class="filter-group date-range" style="display: none;">
-                    <label for="start-date">From</label>
-                    <input type="date" id="start-date">
-                </div>
-                
-                <div class="filter-group date-range" style="display: none;">
-                    <label for="end-date">To</label>
-                    <input type="date" id="end-date">
-                </div>
-                
-                <div class="filter-group">
-                    <label for="department">Department</label>
-                    <select id="department">
-                        <option value="">All Departments</option>
-                    </select>
-                </div>
-                
-                <div class="filter-buttons">
-                    <button class="btn-primary" onclick="refreshReports()">Generate Report</button>
-                    <button class="btn-outline" onclick="resetFilters()">Reset</button>
-                </div>
-            </div>
-            
-            <div id="error-container"></div>
-            
-            <div class="reports-grid">
-                <div class="report-card loan-summary">
-                    <h3>Loan Applications Summary</h3>
-                    <div class="report-stats">
-                        <div class="stat-item">
-                            <div class="stat-value total" id="total-loans">${data.total_applications || 0}</div>
-                            <div class="stat-label">Total</div>
-                        </div>
-                        <div class="stat-item">
-                            <div class="stat-value approved" id="approved-loans">${data.approved_applications || 0}</div>
-                            <div class="stat-label">Approved</div>
-                        </div>
-                        <div class="stat-item">
-                            <div class="stat-value pending" id="pending-loans">${data.pending_applications || 0}</div>
-                            <div class="stat-label">Pending</div>
-                        </div>
-                        <div class="stat-item">
-                            <div class="stat-value rejected" id="rejected-loans">${data.rejected_applications || 0}</div>
-                            <div class="stat-label">Rejected</div>
-                        </div>
-                    </div>
-                </div>
-                
-                <div class="report-card">
-                    <h3>Department Loan Distribution</h3>
-                    <div class="department-list" id="department-distribution">
-                        ${renderDepartmentDistribution(data.department_breakdown)}
-                    </div>
-                </div>
-                
-                <div class="report-card">
-                    <h3>Loan Metrics</h3>
-                    <div class="report-stats">
-                        <div class="stat-item">
-                            <div class="stat-value" id="avg-amount">$${data.average_loan_amount ? parseFloat(data.average_loan_amount).toFixed(2) : '0'}</div>
-                            <div class="stat-label">Avg. Loan Amount</div>
-                        </div>
-                        <div class="stat-item">
-                            <div class="stat-value" id="most-common-type">${data.most_common_loan_type && data.most_common_loan_type.name ? data.most_common_loan_type.name : 'N/A'}</div>
-                            <div class="stat-label">Most Common Loan Type</div>
-                        </div>
-                    </div>
-                </div>
-                
-                <div class="report-card">
-                    <h3>Loan Processing Times</h3>
-                    <div class="report-stats">
-                        <div class="stat-item">
-                            <div class="stat-value" id="avg-processing">${data.avg_processing_days ? data.avg_processing_days.toFixed(1) : '0'}</div>
-                            <div class="stat-label">Avg. Days to Process</div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-            
-            <h2 class="detailed-title">Detailed Loan Report</h2>
-            <div id="detailed-report">
-                <table>
-                    <thead>
-                        <tr>
-                            <th>Employee</th>
-                            <th>Department</th>
-                            <th>Loan Type</th>
-                            <th>Amount</th>
-                            <th>Applied Date</th>
-                            <th>Status</th>
-                            <th>Processed By</th>
-                        </tr>
-                    </thead>
-                    <tbody id="loan-details">
-                        <tr>
-                            <td colspan="7" style="text-align: center;">Loading detailed loan data...</td>
-                        </tr>
-                    </tbody>
-                </table>
-            </div>
-        </div>
-    `;
-}
 
 function renderAdminReports(data) {
     return `
@@ -1572,6 +2265,7 @@ function renderAdminReports(data) {
                 <div class="summary-box">
                     <h3>Total System Users</h3>
                     <div class="summary-value" id="total-users">${data.total_users || 0}</div>
+                    
                 </div>
                 
                 <div class="summary-box">
@@ -1580,18 +2274,12 @@ function renderAdminReports(data) {
                 </div>
                 
                 <div class="summary-box">
-                    <h3>Total Employees</h3>
-                    <div class="summary-value" id="total-employees">${data.total_employees || 0}</div>
+                    <h3>Total Users</h3>
+                    <div class="summary-value" id="total-users">${data.total_users || 0}</div>
                 </div>
             </div>
             
-            <div class="reports-grid">
-                <div class="report-card">
-                    <h3>Branch Performance</h3>
-                    <div class="department-list" id="branch-distribution">
-                        ${renderBranchDistribution(data.branch_breakdown)}
-                    </div>
-                </div>
+            
                 
                 <div class="report-card">
                     <h3>User Activity</h3>
@@ -1633,23 +2321,6 @@ function renderAdminReports(data) {
     `;
 }
 
-function renderDepartmentDistribution(departmentData) {
-    if (!departmentData || Object.keys(departmentData).length === 0) {
-        return '<p>No data available</p>';
-    }
-    
-    let html = '';
-    Object.entries(departmentData).forEach(([dept, count]) => {
-        html += `
-            <div class="dept-item clickable" onclick="filterByDepartment('${dept}')">
-                <span class="dept-name">${dept}</span>
-                <span class="dept-count">${count}</span>
-            </div>
-        `;
-    });
-    
-    return html;
-}
 
 function renderBranchDistribution(branchData) {
     if (!branchData || Object.keys(branchData).length === 0) {
@@ -1669,6 +2340,8 @@ function renderBranchDistribution(branchData) {
     return html;
 }
 
+
+
 function renderUserActivity(userData) {
     if (!userData || Object.keys(userData).length === 0) {
         return '<p>No data available</p>';
@@ -1687,21 +2360,6 @@ function renderUserActivity(userData) {
     return html;
 }
 
-function renderChangeIndicator(changePercent) {
-    if (changePercent === undefined || changePercent === null) {
-        return 'No change data';
-    }
-    
-    const isPositive = changePercent >= 0;
-    const changeClass = isPositive ? 'change-up' : 'change-down';
-    const changeIcon = isPositive ? '↑' : '↓';
-    
-    return `
-        <span class="${changeClass}">
-            ${changeIcon} ${Math.abs(changePercent).toFixed(1)}% from previous period
-        </span>
-    `;
-}
 
 function formatNumber(num) {
     return num.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ",");
@@ -1791,19 +2449,7 @@ function formatNumber(num) {
             }
         }
 
-        // Loan Actions
-        async function updateLoan(loanId, status) {
-            try {
-                const response = await apiClient.put(`/loan-applications/${loanId}`, { status });
-                if (!response.ok) throw new Error('Update failed');
-                
-                const updatedLoan = await response.json();
-                showNotification('Loan updated successfully');
-                loadSection('loan-applications');
-            } catch (error) {
-                showNotification(error.message, 'error');
-            }
-        }
+        
 
         // Authentication
         async function handleLogout() {
@@ -1828,7 +2474,7 @@ function formatNumber(num) {
         document.addEventListener('DOMContentLoaded', () => {
              renderSidebar();
             // Load default section
-            loadSection('loan-applications');
+            loadSection('dashboard');
             
             // Verify session periodically
             setInterval(async () => {
@@ -1845,6 +2491,78 @@ function formatNumber(num) {
             const sidebar = document.getElementById('sidebar');
             sidebar.classList.toggle('collapsed');
         }
+        //Admin side
+
+        function renderAdminDashboard(metrics) {
+    return `
+        <div class="dashboard-container">
+            <h2>Admin Dashboard</h2>
+            
+            <div class="metrics-grid">
+                <div class="metric-card">
+                    <div class="metric-value">${metrics.total_employees || 0}</div>
+                    <div class="metric-label">Employees</div>
+                </div>
+                <div class="metric-card">
+                    <div class="metric-value">${metrics.total_users || 0}</div>
+                    <div class="metric-label">Users</div>
+                </div>
+                <div class="metric-card">
+                    <div class="metric-value">${metrics.total_branches || 0}</div>
+                    <div class="metric-label">Branches</div>
+                </div>
+                <div class="metric-card">
+                    <div class="metric-value">${metrics.total_loan_types || 0}</div>
+                    <div class="metric-label">Loan Types</div>
+                </div>
+            </div>
+            
+            <div class="dashboard-sections">
+                <div class="dashboard-section">
+                    <h3>Recent Users</h3>
+                    <div class="recent-items">
+                        ${metrics.recent_users && metrics.recent_users.length > 0 ? 
+                            metrics.recent_users.map(user => `
+                                <div class="recent-item">
+                                    <div>${user.username}</div>
+                                    <div>${user.role}</div>
+                                    <div>${new Date(user.created_at).toLocaleDateString()}</div>
+                                </div>
+                            `).join('') : 
+                            '<p>No recent users</p>'
+                        }
+                    </div>
+                </div>
+                
+                <div class="dashboard-section">
+                    <h3>Recent Activity</h3>
+                    <div class="recent-items">
+                        ${metrics.recent_audit_logs && metrics.recent_audit_logs.length > 0 ? 
+                            metrics.recent_audit_logs.map(log => `
+                                <div class="recent-item">
+                                    <div>${log.action_type}</div>
+                                    <div>${log.description.substring(0, 60)}${log.description.length > 60 ? '...' : ''}</div>
+                                    <div>${new Date(log.created_at).toLocaleString()}</div>
+                                </div>
+                            `).join('') : 
+                            '<p>No recent activity</p>'
+                        }
+                    </div>
+                </div>
+            </div>
+        </div>
+    `;
+}
+
+        document.addEventListener('DOMContentLoaded', function() {
+   
+    renderSidebar();
+    
+    // Load dashboard by default for admin users
+    if (userRole.toLowerCase() === 'admin') {
+        loadSection('dashboard');
+    } 
+});
     </script>
 </body>
 </html>

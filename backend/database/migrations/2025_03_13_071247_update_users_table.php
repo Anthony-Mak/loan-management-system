@@ -27,7 +27,7 @@ return new class extends Migration
             }
             
             // Add your new columns
-            $table->string('employee_id', 30)->nullable();
+            $table->unsignedBigInteger('employee_id')->after('login_id');
             $table->string('username', 50)->unique();
             $table->enum('role', ['admin', 'hr', 'employee'])->default('employee')->comment('System roles: admin, hr, employee');
             $table->timestamp('last_login')->nullable();

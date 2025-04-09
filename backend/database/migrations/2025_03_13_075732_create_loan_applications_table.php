@@ -13,7 +13,7 @@ return new class extends Migration
     {
         Schema::create('loan_applications', function (Blueprint $table) {
             $table->id('loan_id');
-            $table->string('employee_id', 50); 
+            $table->unsignedBigInteger('employee_id'); 
             $table->foreign('employee_id')->references('employee_id')->on('employees');
             $table->unsignedBigInteger('loan_type_id')->nullable();
             $table->foreign('loan_type_id')->references('loan_type_id')->on('loan_types');
@@ -23,7 +23,7 @@ return new class extends Migration
             $table->text('review')->nullable();
             $table->timestamp('application_date')->useCurrent();
             $table->timestamp('processed_date')->nullable();
-            $table->string('processed_by', 50)->nullable();
+            $table->unsignedBigInteger('processed_by')->nullable();
             $table->foreign('processed_by')->references('employee_id')->on('employees');
             $table->timestamps();
         });

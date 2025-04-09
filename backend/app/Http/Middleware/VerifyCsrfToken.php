@@ -8,6 +8,8 @@ class VerifyCsrfToken extends Middleware
 {
     protected $except = [
         '/login',
+        'change-password',
+        'api/change-password',
         '/api/login',
         '/api/*',
         'sanctum/csrf-cookie',
