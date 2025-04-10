@@ -160,11 +160,12 @@
         }
         
         // Render loans section
-        function renderLoans(loans) {
+        // Render loans section
+function renderLoans(loans) {
     if (!loans || !loans.data || !Array.isArray(loans.data)) {
         return '<div class="error-message">No loan data available</div>';
     }
-    
+
     var html = '<div class="section-header">'
         + '<h2>Loan Applications</h2>'
         + '</div>'
@@ -172,10 +173,9 @@
         + '<div class="filter-group">'
         + '<label for="statusFilter">Status:</label>'
         + '<select id="statusFilter" onchange="loadSection(\'loans\')">'
-        + '<option value="">All Statuses</option>'
-        + '<option value="Pending">Pending</option>'
-        + '<option value="Approved">Approved</option>'
-        + '<option value="Rejected">Rejected</option>'
+        + '<option value="Pending Recommendation">Pending</option>'
+        + '<option value="Recommended">Recommended</option>'
+        + '<option value="Not Recommended">Not Recommended</option>'
         + '</select>'
         + '</div>'
         + '<div class="filter-group">'
@@ -188,7 +188,7 @@
         + '</div>'
         + '</div>'
         + '<div class="loan-list">';
-    
+
     loans.data.forEach(function(loan) {
         var employeeName = loan.employee && loan.employee.full_name ? loan.employee.full_name : 'Unknown';
         var loanTypeName = loan.loan_type && loan.loan_type.name ? loan.loan_type.name : 'Unknown';
@@ -200,17 +200,31 @@
 
         var processedByName = 'System';
         if (loan.processed_by) {
-            if (loan.processed_by_user && loan.processed_by_user.username) {
-                processedByName = loan.processed_by_user.username;
+            if (loan.processedBy && loan.processedBy.username) {
+                processedByName = loan.processedBy.username;
             } else if (typeof loan.processed_by === 'string') {
                 processedByName = loan.processed_by;
-                }
+            }
+        }
+        
+        var statusClass = '';
+        var displayStatus = '';
+
+        if (loan.status === 'Pending Recommendation') {
+            statusClass = 'pending';
+            displayStatus = 'Pending';
+        } else if (loan.status === 'Recommended') {
+            statusClass = 'approved';
+            displayStatus = 'Recommended';
+        } else if (loan.status === 'Not Recommended') {
+            statusClass = 'rejected';
+            displayStatus = 'Not Recommended';
         }
         
         html += '<div class="loan-item">'
             + '<div class="loan-header">'
             + '<h3>' + employeeName + ' - ' + loanTypeName + '</h3>'
-            + '<span class="status ' + loanStatus + '">' + (loan.status || 'Unknown') + '</span>'
+            + '<span class="status ' + statusClass + '">' + displayStatus + '</span>'
             + '</div>'
             + '<div class="loan-details">'
             + '<p>Amount: $' + loanAmount + ' | Term: ' + loanTermMonths + ' months</p>'
@@ -223,7 +237,7 @@
         html += '</div>';
         
         html += '<div class="hr-actions">';
-        if (loan.status === 'Pending') {
+        if (loan.status === 'Pending Recommendation') {
             html += '<button class="action-btn" onclick="showReviewModal(' + loan.loan_id + ')">Review</button>';
         } else {
             html += '<button class="action-btn" onclick="viewLoanDetails(' + loan.loan_id + ')">View Details</button>';
@@ -246,7 +260,6 @@
     
     return html;
 }
-
 
         
         // Render employees section
@@ -465,24 +478,29 @@
             if (modal) modal.remove();
         }
         function viewLoanDetails(loanId) {
-    fetch(apiBase + '/loans/' + loanId, {
-        headers: {
-            'Accept': 'application/json',
-            'X-CSRF-TOKEN': csrfToken
-        },
-        credentials: 'include'
-    })
-    .then(function(response) {
-        if (!response.ok) {
+            fetch(apiBase + '/loans/' + loanId, {
+                headers: {
+                    'Accept': 'application/json',
+                    'X-CSRF-TOKEN': csrfToken
+                },
+                credentials: 'include'
+                })
+                .then(function(response) {
+                    if (!response.ok) {
             throw new Error('Failed to load loan details');
         }
         return response.json();
     })
     .then(function(loan) {
-        var processedByName = 'System';
+        console.log('Loan details received:', loan);
+
+        const employeeName = loan.employee?.full_name || 'Unknown';
+        const loanTypeName = loan.loan_type?.name || 'Unknown';
+
+        let processedByName = 'System';
         if (loan.processed_by) {
-            if (typeof loan.processed_by === 'object' && loan.processed_by.employee && loan.processed_by.employee.full_name) {
-                processedByName = loan.processed_by.employee.full_name;
+            if (loan.processed_by.username) {
+                processedByName = loan.processed_by.username;
             } else if (typeof loan.processed_by === 'string') {
                 processedByName = loan.processed_by;
             }
@@ -491,8 +509,8 @@
         var modalHTML = '<div class="modal-overlay" id="loan-details-modal">'
             + '<div class="modal-content">'
             + '<h2>Loan Application Details</h2>'
-            + '<p>Employee: ' + (loan.employee ? loan.employee.full_name : 'Unknown') + '</p>'
-            + '<p>Loan Type: ' + (loan.loan_type ? loan.loan_type.name : 'Unknown') + '</p>'
+            + '<p>Employee: ' + employeeName + '</p>'
+            + '<p>Loan Type: ' + loanTypeName + '</p>'
             + '<p>Amount: $' + (loan.amount || 0) + '</p>'
             + '<p>Term: ' + (loan.term_months || 0) + ' months</p>'
             + '<p>Purpose: ' + (loan.purpose || 'Not specified') + '</p>'
@@ -539,8 +557,10 @@ function editLoan(loanId) {
     showReviewModal(loanId);
 }
 function downloadLoanPDF(loanId) {
-    showNotification('PDF download functionality will be implemented soon.', 'info');
-    // This is just a placeholder - you'll implement the actual PDF download functionality
+    // Show loading notification
+    showNotification('Preparing PDF for download...', 'info');  
+    // Open PDF in new tab
+    window.open('/api/hr/employee/loan/' + loanId + '/pdf', '_blank');
 }
 
         
@@ -560,6 +580,7 @@ function downloadLoanPDF(loanId) {
                 return response.json();
             })
             .then(function(loan) {
+                console.log('Loan data received:', loan);
                 var modalHTML = '<div class="modal-overlay" id="review-modal">'
                     + '<div class="modal-content">'
                     + '<h2>Review Loan Application</h2>'
@@ -573,8 +594,8 @@ function downloadLoanPDF(loanId) {
                     + '<textarea id="review-notes" rows="4"></textarea>'
                     + '</div>'
                     + '<div class="modal-actions">'
-                    + '<button class="approve-btn" onclick="processLoan(' + loan.loan_id + ', \'Approved\')">Approve</button>'
-                    + '<button class="reject-btn" onclick="processLoan(' + loan.loan_id + ', \'Rejected\')">Reject</button>'
+                    + '<button class="approve-btn" onclick="processLoan(' + loan.loan_id + ', \'Recommended\')">Recommend</button>'
+                    + '<button class="reject-btn" onclick="processLoan(' + loan.loan_id + ', \'Not Recommended\')">Reject</button>'
                     + '<button class="cancel-btn" onclick="closeReviewModal()">Cancel</button>'
                     + '</div>'
                     + '</div>'
@@ -596,6 +617,16 @@ function downloadLoanPDF(loanId) {
         // Process loan application
         function processLoan(loanId, status) {
             var notes = document.getElementById('review-notes').value;
+
+            var databaseStatus;
+            if (status === 'Approved') {
+                databaseStatus = 'Recommended';
+            } else if (status === 'Rejected') {
+                databaseStatus = 'Not Recommended';
+            } else {
+                databaseStatus = 'Pending Recommendation';
+            }
+
             
             fetch(apiBase + '/loan-applications/' + loanId, {
                 method: 'PUT',

@@ -1618,7 +1618,7 @@ function renderUsers(users) {
                                 <h3>${user.username}</h3>
                                 <p class="employee-name">${user.employee && user.employee.full_name ? user.employee.full_name : 'No Employee'}</p>
                                 <p>Role: <span class="user-role">${user.role}</span></p>
-                                <p>Status: <span class="status ${user.is_active ? 'approved' : 'rejected'}">${user.is_active ? 'Active' : 'Inactive'}</span></p>
+                                <p>Status: <span class="status ${user.is_active ? 'recommended' : 'not recommended'}">${user.is_active ? 'Active' : 'Inactive'}</span></p>
                                 <p>Last Login: ${user.last_login ? new Date(user.last_login).toLocaleString() : 'Never'}</p>
                             </div>
                             <div class="user-actions">
@@ -1911,7 +1911,7 @@ function toggleUserStatus(userId, newStatus) {
 function resetUserPassword(userId) {
     if (confirm('Are you sure you want to reset this user\'s password?')) {
         fetch(`${apiBase}/users/${userId}/reset-password`, {
-            method: 'POST',
+            method: 'PUT',
             headers: {
                 'Accept': 'application/json',
                 'X-CSRF-TOKEN': csrfToken
@@ -2385,7 +2385,7 @@ function formatNumber(num) {
                             <span class="stat-value total">${reports.total_applications || 0}</span>
                         </div>
                         <div class="stat-item">
-                            <span class="stat-label">Approved</span>
+                            <span class="stat-label">Recommended</span>
                             <span class="stat-value approved">${reports.approved_applications || 0}</span>
                         </div>
                         <div class="stat-item">
@@ -2393,7 +2393,7 @@ function formatNumber(num) {
                             <span class="stat-value pending">${reports.pending_applications || 0}</span>
                         </div>
                         <div class="stat-item">
-                            <span class="stat-label">Rejected</span>
+                            <span class="stat-label">Not Recommended</span>
                             <span class="stat-value rejected">${reports.rejected_applications || 0}</span>
                         </div>
                     </div>

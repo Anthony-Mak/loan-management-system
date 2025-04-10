@@ -69,7 +69,7 @@ Route::middleware([
             Route::put('/users/{userId}/role', [AdminController::class, 'updateUserRole']);
             Route::put('/users/{userId}/status', [AdminController::class, 'updateUserStatus']);
             Route::post('/users', [AdminController::class, 'createUser']);
-            Route::put('/users/{user}/reset-password', [AdminController::class, 'resetUserPassword']);
+            Route::put('/users/{userId}/reset-password', [AdminController::class, 'resetUserPassword']);
         });
 
         Route::middleware('role:hr')->prefix('hr')->group(function () {
@@ -82,6 +82,7 @@ Route::middleware([
             Route::get('/employees/{id}', [HrController::class, 'employeeDetails']);
             Route::get('/reports', [HrController::class, 'generateReport']);
             Route::get('/departments', [HrController::class, 'getDepartments']);
+            Route::get('/employee/loan/{loan}/pdf', [LoanApplicationController::class, 'downloadPDF'])->name('employee.loan.pdf')->middleware(['auth']);
         });
         
         // Employee routes

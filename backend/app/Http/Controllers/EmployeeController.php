@@ -58,9 +58,9 @@ class EmployeeController extends Controller
         ->get();
         $stats = [
             'total' => $loans->count(),
-            'pending' => $loans->where('status', 'Pending')->count(),
-            'approved' => $loans->where('status', 'Approved')->count(),
-            'rejected' => $loans->where('status', 'Rejected')->count(),
+            'pending' => $loans->where('status', 'Pending Recommendation')->count(),
+            'recommended' => $loans->where('status', 'Recommended')->count(),
+            'not_recommended' => $loans->where('status', 'Not Recommended')->count()
         ];
         return response()->json([
             'loans' => $loans,

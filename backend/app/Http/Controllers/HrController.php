@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Models\Employee;
 use App\Models\LoanApplication;
 use Illuminate\Http\Request;
+use App\Models\LoanType;
 use Illuminate\Support\Facades\Auth;
 use Carbon\Carbon;
 use Log;
@@ -69,7 +70,7 @@ class HrController extends Controller
     ]);
     
         $request->validate([
-            'status' => 'required|in:Approved,Rejected',
+            'status' => 'required|in:Recommended,Not Recommended',
             'review_notes' => 'nullable|string|max:500'
         ]);
 
@@ -98,15 +99,57 @@ class HrController extends Controller
         ]);
     }
     public function getLoanDetails($id)
-    {
+{
+    try {
         $loan = LoanApplication::with([
             'employee', 
             'loanType', 
             'processedBy'
-            ])->findOrFail($id);
-           
-            return response()->json($loan);
+        ])->findOrFail($id);
+        
+        // Add detailed logging to diagnose relationship issues
+        Log::info('Loan details retrieved:', [
+            'loan_id' => $loan->loan_id,
+            'employee_id' => $loan->employee_id,
+            'loan_type_id' => $loan->loan_type_id,
+            'employee_exists' => !is_null($loan->employee),
+            'loan_type_exists' => !is_null($loan->loanType),
+            'processed_by_exists' => !is_null($loan->processedBy)
+        ]);
+        
+        // If relationships are still null, try to fetch them directly
+        if (is_null($loan->employee) && !is_null($loan->employee_id)) {
+            $employee = Employee::find($loan->employee_id);
+            if ($employee) {
+                Log::info('Employee found directly:', ['employee_id' => $employee->employee_id]);
+                // You can attach it manually if needed
+                // $loan->setRelation('employee', $employee);
+            }
+        }
+        
+        if (is_null($loan->loanType) && !is_null($loan->loan_type_id)) {
+            $loanType = LoanType::find($loan->loan_type_id);
+            if ($loanType) {
+                Log::info('Loan type found directly:', ['loan_type_id' => $loanType->loan_type_id]);
+                // You can attach it manually if needed
+                // $loan->setRelation('loanType', $loanType);
+            }
+        }
+        
+        return response()->json($loan);
+    } catch (\Exception $e) {
+        Log::error('Error retrieving loan details:', [
+            'loan_id' => $id, 
+            'error' => $e->getMessage(),
+            'trace' => $e->getTraceAsString()
+        ]);
+        
+        return response()->json([
+            'error' => 'Failed to retrieve loan details',
+            'message' => $e->getMessage()
+        ], 500);
     }
+}
 
     public function loans(Request $request) 
     {

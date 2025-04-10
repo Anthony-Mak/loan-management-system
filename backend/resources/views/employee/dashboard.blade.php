@@ -6,6 +6,7 @@
     <meta name="csrf-token" content="{{ csrf_token() }}">
     <title>{{ config('app.name') }} - Employee Dashboard</title>
     @vite(['resources/css/app.css'])
+    @vite(['resources/css/employee.css'])
 </head>
 <body>
     <nav class="navbar">
@@ -28,11 +29,11 @@
                 <div class="card-value" id="pending-applications">0</div>
             </div>
             <div class="card">
-                <div class="card-title">Approved</div>
+                <div class="card-title">Recommended</div>
                 <div class="card-value" id="approved-applications">0</div>
             </div>
             <div class="card">
-                <div class="card-title">Rejected</div>
+                <div class="card-title">Not Recommended</div>
                 <div class="card-value" id="rejected-applications">0</div>
             </div>
         </div>
@@ -48,9 +49,21 @@
         <div id="employee-loans" class="loan-list">
             <!-- Loan items will be added here -->
         </div>
-        
-        <div id="loan-detail" class="loan-detail">
-            <!-- Selected loan details will be shown here -->
+    </div>
+
+    <!-- Modal structure for loan details -->
+    <div id="loan-detail-modal" class="modal-overlay">
+        <div class="modal-container">
+            <div class="modal-header">
+                <h3 class="modal-title">Loan Details</h3>
+                <button class="modal-close" onclick="closeModal()">&times;</button>
+            </div>
+            <div class="modal-body" id="modal-content">
+                <!-- Loan details will be inserted here -->
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-primary" onclick="closeModal()">Close</button>
+            </div>
         </div>
     </div>
 
@@ -120,10 +133,10 @@
                         </div>
                         <div class="loan-amount">$${loan.amount}</div>
                         <div>
-                            <span class="status ${loan.status.toLowerCase()}">${loan.status}</span>
+                            <span class="status ${getStatusClass(loan.status)}">${loan.status}</span>
                         </div>
                         <div>
-                            <button onclick="showLoanDetail(${loan.id})" class="btn btn-primary">
+                            <button onclick="showLoanDetail(${loan.loan_id})" class="btn btn-primary">
                                 View Details
                             </button>
                         </div>
@@ -134,20 +147,31 @@
 
         async function showLoanDetail(loanId) {
             try {
+                // Show loading state in modal
+                const modalContent = document.getElementById('modal-content');
+                modalContent.innerHTML = `<div class="loading">Loading loan details...</div>`;
+                
+                // Show the modal
+                document.getElementById('loan-detail-modal').classList.add('active');
+                
+                // Prevent body scrolling when modal is open
+                document.body.style.overflow = 'hidden';
+                
                 const response = await apiClient.get(`/loans/${loanId}`);
                 if (!response.ok) throw new Error('Failed to load loan details');
                 
                 const loan = await response.json();
-                renderLoanDetail(loan);
+                renderLoanDetailInModal(loan);
             } catch (error) {
                 showNotification(error.message, 'error');
+                closeModal();
             }
         }
 
-        function renderLoanDetail(loan) {
-            const detailContainer = document.getElementById('loan-detail');
-            detailContainer.innerHTML = `
-                <h3>Loan Details</h3>
+        function renderLoanDetailInModal(loan) {
+            const modalContent = document.getElementById('modal-content');
+            
+            modalContent.innerHTML = `
                 <div class="loan-detail-grid">
                     <div class="loan-detail-item">
                         <div class="loan-detail-label">Loan ID</div>
@@ -160,7 +184,7 @@
                     <div class="loan-detail-item">
                         <div class="loan-detail-label">Status</div>
                         <div class="loan-detail-value">
-                            <span class="status ${loan.status.toLowerCase()}">${loan.status}</span>
+                            <span class="status ${getStatusClass(loan.status)}">${loan.status}</span>
                         </div>
                     </div>
                     <div class="loan-detail-item">
@@ -179,14 +203,32 @@
                     </div>
                 ` : ''}
             `;
-            detailContainer.classList.add('active');
         }
+
+        function closeModal() {
+            document.getElementById('loan-detail-modal').classList.remove('active');
+            document.body.style.overflow = 'auto'; // Restore body scrolling
+        }
+
+        // Close modal if clicking outside content area
+        document.getElementById('loan-detail-modal').addEventListener('click', function(event) {
+            if (event.target === this) {
+                closeModal();
+            }
+        });
+
+        // Close modal on ESC key press
+        document.addEventListener('keydown', function(event) {
+            if (event.key === 'Escape' && document.getElementById('loan-detail-modal').classList.contains('active')) {
+                closeModal();
+            }
+        });
 
         function updateDashboardStats(stats) {
             document.getElementById('total-applications').textContent = stats.total;
             document.getElementById('pending-applications').textContent = stats.pending;
-            document.getElementById('approved-applications').textContent = stats.approved;
-            document.getElementById('rejected-applications').textContent = stats.rejected;
+            document.getElementById('approved-applications').textContent = stats.recommended;
+            document.getElementById('rejected-applications').textContent = stats.not_recommended;
         }
 
         async function handleLogout() {
@@ -221,6 +263,13 @@
                 showNotification('Failed to initialize dashboard', 'error');
             }
         });
+
+        function getStatusClass(status) {
+            status = status.toLowerCase();
+            if (status === 'recommended') return 'approved';
+            if (status === 'not recommended') return 'rejected';
+            return 'pending'; // Default or for 'pending' status
+        }
     </script>
 </body>
 </html>

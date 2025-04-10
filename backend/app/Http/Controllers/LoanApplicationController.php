@@ -12,6 +12,7 @@ use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use App\Models\Collateral;
 use \Log;
+use Barryvdh\DomPDF\Facade\Pdf;
 
 class LoanApplicationController extends Controller
 {
@@ -184,86 +185,7 @@ class LoanApplicationController extends Controller
         }
         return view('employee.loan.loan_policy', compact('loan'));
     }
- /*   public function storePolicyAcknowledgment(Request $request)
-{
-    Log::debug('Policy acknowledgment requested:', [
-        'loan_id' => $request->loan_id,
-        'signature' => $request->signature
-    ]);
-    
-    $request->validate([
-        'loan_id' => 'required|exists:loan_applications,loan_id',
-        'signature' => 'required|string|max:100'
-    ]);
-    
-    $loan = LoanApplication::findOrFail($request->loan_id);
-    
-    // Check if this loan belongs to the authenticated user
-    if ($loan->employee_id !== Auth::user()->employee_id) {
-        Log::error('Unauthorized policy acknowledgment attempt', [
-            'loan_id' => $request->loan_id,
-            'user_id' => Auth::user()->id,
-            'employee_id' => Auth::user()->employee_id
-        ]);
-        abort(403);
-    }
-    
-    try {
-        // Update loan with policy acknowledgment
-        $loan->update([
-            'policy_acknowledged' => true,
-            'policy_signature' => $request->signature,
-            'policy_date' => now()
-        ]);
-        
-        Log::info('Policy acknowledgment successful', [
-            'loan_id' => $loan->loan_id,
-            'redirect_to' => route('employee.loan.pledge', ['loan' => $loan->loan_id])
-        ]);
-        
-        return redirect()->route('employee.loan.pledge', ['loan' => $loan->loan_id])
-            ->with('success', 'Loan policy acknowledged successfully.');
-    } catch (\Exception $e) {
-        Log::error('Policy acknowledgment failed', [
-            'loan_id' => $request->loan_id,
-            'error' => $e->getMessage()
-        ]);
-        
-        return back()->with('error', 'Failed to acknowledge policy: ' . $e->getMessage());
-    }
-}*/
 
-/* public function storePolicyAcknowledgment(Request $request)
-{
-    $request->validate([
-        'loan_id' => 'required|exists:loan_applications,loan_id',
-        'signature' => 'required|string|max:100'
-    ]);
-    
-    $loan = LoanApplication::findOrFail($request->loan_id);
-    
-    // Check if this loan belongs to the authenticated user
-    if ($loan->employee_id !== Auth::user()->employee_id) {
-        Log::error('Unauthorized policy acknowledgment attempt', [
-            'loan_id' => $request->loan_id,
-            'user_id' => Auth::user()->id,
-            'employee_id' => Auth::user()->employee_id
-        ]);
-        abort(403);
-    }
-    
-    // Skip the database update and proceed directly to the next step
-    Log::info('Policy acknowledgment bypassed', [
-        'loan_id' => $loan->loan_id,
-        'redirect_to' => route('employee.loan.pledge', ['loan' => $loan->loan_id])
-    ]);
-    
-    return redirect()->route('employee.loan.pledge', ['loan' => $loan->loan_id])
-        ->with('success', 'Proceeding to pledge form.');
-}
-
-
- */
 public function storePolicyAcknowledgment(Request $request)
 {
     Log::info('Policy Acknowledgment Method Called', [
@@ -311,31 +233,7 @@ public function storePolicyAcknowledgment(Request $request)
     return redirect()->route('employee.loan.pledge', ['loan' => $loan->loan_id])
         ->with('success', 'Proceeding to pledge form.');
 }
-    /**
- * Show the pledge form
- */
-/* public function showPledgeForm(Request $request, $loanId)
-{
-    $loan = LoanApplication::with(['employee', 'loanType'])
-        ->findOrFail($loanId);
-    
-    // Check if this loan belongs to the authenticated user
-    if ($loan->employee_id !== Auth::user()->employee_id) {
-        Log::error('Unauthorized policy acknowledgment attempt', [
-            'loan_id' => $request->loan_id,
-            'user_id' => Auth::user()->id,
-            'employee_id' => Auth::user()->employee_id
-        ]);
-        abort(403, 'Unauthorized access');
-    }
-
-    Log::info('Policy acknowledgment bypassed', [
-        'loan_id' => $loan->loan_id,
-        'redirect_to' => route('employee.loan.pledge', ['loan' => $loan->loan_id])
-    ]);
-
-    return view('employee.loan.pledge_form', compact('loan'));
-} */
+ 
 public function showPledgeForm(Request $request, $loanId)
 {
     Log::info('Pledge Form Method Called', [
@@ -468,11 +366,34 @@ public function storePledge(Request $request)
      * PDF download route
      */
     public function downloadPDF($loanId)
-    {
-        $loan = LoanApplication::with(['employee', 'employee.bankingDetails', 'loanType'])
-            ->findOrFail($loanId);
-            
-        // Implement PDF generation and download logic
-        // Return file download response
+{
+    $loan = LoanApplication::with([
+        'employee', 
+        'employee.bankingDetails', 
+        'loanType'
+    ])->findOrFail($loanId);
+    
+    // Authorization check remains the same
+    if (Auth::user()->employee_id !== $loan->employee_id && Auth::user()->role !== 'hr') {
+        abort(403, 'Unauthorized access');
     }
+
+    if (!$loan->employee) {
+        return back()->with('error', 'Employee data not found for this loan application.');
+    }
+    
+    $collaterals = Collateral::where('loan_id', $loanId)->get();
+    
+    //Check if employee exists before accessing bankingDetails
+    $data = [
+        'loan' => $loan,
+        'employee' => $loan->employee,
+        'bankingDetails' => $loan->employee ? $loan->employee->bankingDetails : null,
+        'collaterals' => $collaterals
+    ];
+    
+    $pdf = Pdf::loadView('pdf.loan-application', $data);
+    
+    return $pdf->download('loan_application_'.$loanId.'.pdf');
+}
 }

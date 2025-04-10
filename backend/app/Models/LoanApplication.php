@@ -4,11 +4,13 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
 use App\Traits\AuditLogTrait;
+use Carbon\Carbon;
 
 class LoanApplication extends Model
 {
     use AuditLogTrait;
-    protected $primaryKey = 'loan_id'; // Specify the primary key column name
+    
+    protected $primaryKey = 'loan_id';
     
     protected $fillable = [
         'employee_id',
@@ -20,39 +22,46 @@ class LoanApplication extends Model
         'review_notes',
         'processed_by',
         'processed_date'
-        
+    ];
+    
+    protected $casts = [
+        'application_date' => 'datetime',
+        'processed_date' => 'datetime',
+        'amount' => 'decimal:2'
     ];
     
     public function employee()
     {
-        return $this->belongsTo(Employee::class);
+        return $this->belongsTo(Employee::class, 'employee_id', 'employee_id');
     }
     
     public function loanType()
     {
-        return $this->belongsTo(LoanType::class);
+        return $this->belongsTo(LoanType::class, 'loan_type_id', 'loan_type_id');
     }
+    
+    public function processedBy()
+    {
+        return $this->belongsTo(User::class, 'processed_by', 'user_id');
+    }
+    
     public function scopePeriod($query, $periodRange)
-{
-    return $query->whereBetween('application_date', $periodRange);
-}
-
-public function scopeApproved($query)
-{
-    return $query->where('status', 'Approved');
-}
-
-public function scopeRejected($query)
-{
-    return $query->where('status', 'Rejected');
-}
-
-public function scopePending($query)
-{
-    return $query->where('status', 'Pending');
-}
-public function processedBy()
-{
-    return $this->belongsTo(User::class, 'processed_by', 'user_id');
-}
+    {
+        return $query->whereBetween('application_date', $periodRange);
+    }
+    
+    public function scopeApproved($query)
+    {
+        return $query->where('status', 'Recommended');
+    }
+    
+    public function scopeRejected($query)
+    {
+        return $query->where('status', 'Not Recommended');
+    }
+    
+    public function scopePending($query)
+    {
+        return $query->where('status', 'Pending Recommendation');
+    }
 }
