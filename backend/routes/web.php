@@ -5,6 +5,8 @@ use App\Http\Controllers\AuthController;
 use App\Http\Controllers\LoanApplicationController;
 use App\Http\Controllers\AdminController;
 use App\Http\Controllers\HrController;
+use Illuminate\Support\Facades\Storage;
+
 
 /* |-------------------------------------------------------------------------- 
 | Web Routes 
@@ -14,6 +16,104 @@ use App\Http\Controllers\HrController;
 Route::get('/', function () {
     return view('welcome');
 });
+
+//Test route for GCS
+Route::get('/test-gcs-service', function() {
+    try {
+        $gcs = app(App\Services\GoogleCloudStorageService::class);
+        
+        $fileName = 'service-test-' . time() . '.txt';
+        $content = 'Test file content ' . date('Y-m-d H:i:s');
+        
+        $success = $gcs->put($fileName, $content);
+        
+        return [
+            'success' => $success,
+            'file_name' => $fileName,
+            'file_exists' => $gcs->exists($fileName),
+            'file_url' => $gcs->url($fileName),
+            'signed_url' => $gcs->signedUrl($fileName),
+        ];
+    } catch (\Exception $e) {
+        return [
+            'error' => $e->getMessage(),
+            'trace' => $e->getTraceAsString()
+        ];
+    }
+});
+
+Route::get('/diagnose-gcs', function() {
+    try {
+        // Normalize path with forward slashes
+        $cacertPath = str_replace('\\', '/', storage_path('app/cacert.pem'));
+        
+        // Check if cert exists, create if not
+        if (!file_exists($cacertPath)) {
+            $certDir = dirname($cacertPath);
+            if (!is_dir($certDir)) {
+                mkdir($certDir, 0755, true);
+            }
+
+            $context = stream_context_create([
+                'ssl' => [
+                    'verify_peer' => false,
+                    'verify_peer_name' => false,
+                ]
+            ]);
+            
+            $cacert = @file_get_contents('https://curl.se/ca/cacert.pem', false, $context);
+            if ($cacert === false) {
+                return [
+                    'error' => 'Failed to download certificate',
+                    'php_error' => error_get_last()
+                ];
+            }
+            file_put_contents($cacertPath, $cacert);
+        }
+        
+        // Check disk configuration
+        $diskConfig = config('filesystems.disks.gcs');
+        $keyFilePath = str_replace('\\', '/', $diskConfig['key_file']);
+        
+        // Check if cert is readable
+        $certReadable = is_readable($cacertPath);
+        $certSize = $certReadable ? filesize($cacertPath) : 0;
+        
+        // Verify key file
+        $keyFileExists = file_exists($keyFilePath);
+        $keyFileReadable = $keyFileExists ? is_readable($keyFilePath) : false;
+        
+        return [
+            'certificate' => [
+                'path' => $cacertPath,
+                'exists' => file_exists($cacertPath),
+                'readable' => $certReadable,
+                'size' => $certSize,
+                'content_start' => $certReadable ? substr(file_get_contents($cacertPath), 0, 100) . '...' : 'not readable'
+            ],
+            'key_file' => [
+                'path' => $keyFilePath,
+                'exists' => $keyFileExists,
+                'readable' => $keyFileReadable,
+                'content_type' => $keyFileReadable ? (json_decode(file_get_contents($keyFilePath)) ? 'valid json' : 'invalid json') : 'not readable'
+            ],
+            'gcs_config' => [
+                'project_id' => $diskConfig['project_id'],
+                'bucket' => $diskConfig['bucket']
+            ],
+            'php_info' => [
+                'curl_version' => function_exists('curl_version') ? curl_version()['version'] : 'curl not available',
+                'openssl_version' => defined('OPENSSL_VERSION_TEXT') ? OPENSSL_VERSION_TEXT : 'openssl info not available'
+            ]
+        ];
+    } catch (\Exception $e) {
+        return [
+            'error' => $e->getMessage(),
+            'trace' => $e->getTraceAsString()
+        ];
+    }
+});
+//ENDS HERE
 
 // Authentication routes
 Route::get('/login', function () {return view('auth.login'); })->name('login');

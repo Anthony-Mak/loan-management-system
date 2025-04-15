@@ -15,90 +15,90 @@
             color: #333;
         }
         /* ========== Navbar Styles ========== */
-.navbar {
-    background-color: #4361ee;
-    color: white;
-    width: 100%;
-    padding: 1rem 2rem;
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
-    position: fixed;
-    top: 0;
-    left: 0;
-}
+        .navbar {
+            background-color: #4361ee;
+            color: white;
+            width: 100%;
+            padding: 1rem 2rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+            position: fixed;
+            top: 0;
+            left: 0;
+        }
 
-.user-info {
-    display: flex;
-    align-items: center;
-    gap: 0.75rem; 
-}
+        .user-info {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem; 
+        }
 
-.user-profile {
-    background-color: white;
-    width: 40px;
-    height: 40px;
-    border-radius: 50%;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    font-weight: bold;
-    color: #4361ee;
-    flex-shrink: 0; 
-}
+        .user-profile {
+            background-color: white;
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+            color: #4361ee;
+            flex-shrink: 0; 
+        }
 
-#username-display {
-    margin-right: 0.5rem;
-    white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis; 
-    max-width: 150px; 
-}
+        #username-display {
+            margin-right: 0.5rem;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis; 
+            max-width: 150px; 
+        }
 
-.logout-btn {
-    background-color: transparent;
-    border: 1px solid white;
-    color: white;
-    padding: 0.8rem 1.2rem;
-    margin-right: 3rem;
-    border-radius: 4px;
-    cursor: pointer;
-    transition: all 0.3s ease;
-    white-space: nowrap; 
-}
+        .logout-btn {
+            background-color: transparent;
+            border: 1px solid white;
+            color: white;
+            padding: 0.8rem 1.2rem;
+            margin-right: 3rem;
+            border-radius: 4px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            white-space: nowrap; 
+        }
 
-.logout-btn:hover {
-    background-color: white;
-    color: #4361ee;
-}
+        .logout-btn:hover {
+            background-color: white;
+            color: #4361ee;
+        }
 
-/* Responsive adjustments for smaller screens */
-@media (max-width: 600px) {
-    .navbar {
-        padding: 1rem;
-    }
+        /* Responsive adjustments for smaller screens */
+        @media (max-width: 600px) {
+            .navbar {
+                padding: 1rem;
+            }
 
-    .user-info {
-        gap: 0.5rem;
-    }
+            .user-info {
+                gap: 0.5rem;
+            }
 
-    #username-display {
-        display: none; /* Hide username on very small screens */
-    }
+            #username-display {
+                display: none; /* Hide username on very small screens */
+            }
 
-    .user-profile {
-        width: 35px;
-        height: 35px;
-        font-size: 0.9rem;
-    }
+            .user-profile {
+                width: 35px;
+                height: 35px;
+                font-size: 0.9rem;
+            }
 
-    .logout-btn {
-        padding: 0.4rem 0.8rem;
-        font-size: 0.9rem;
-        
-    }
-}
+            .logout-btn {
+                padding: 0.4rem 0.8rem;
+                font-size: 0.9rem;
+                
+            }
+        }
         .container {
             width: 90%;
             max-width: 800px;
@@ -171,6 +171,20 @@
             margin-top: 20px;
             color: green;
             display: none;
+        }
+        .signature-upload-container {
+            margin-bottom: 15px;
+        }
+        .preview-container {
+            margin-top: 10px;
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            display: inline-block;
+        }
+        #signature-preview {
+            max-width: 300px;
+            max-height: 150px;
         }
         @media (max-width: 600px) {
             .container {
@@ -252,12 +266,26 @@
             <h2>ACKNOWLEDGEMENT BY EMPLOYEE</h2>
             <p>By clicking the Next Button, I hereby duly acknowledge that I have read and understood the Staff Loan Policy attached hereto and agree to the terms and conditions set out therein.</p>
             
-            <form action="{{ route('employee.loan.policy.store') }}" method="POST">
+            <form action="{{ route('employee.loan.policy.store') }}" method="POST" enctype="multipart/form-data">
                 @csrf
                 <input type="hidden" name="loan_id" value="{{ $loan->loan_id }}">
                 
+                <div class="form-group">
+                    <label for="signature">Your Signature:</label>
+                    <div class="signature-upload-container">
+                        <input type="file" id="signature" name="signature" accept="image/*" required class="signature-upload">
+                        <div class="preview-container" id="signature-preview-container" style="display: none;">
+                            <img id="signature-preview" src="#" alt="Signature Preview">
+                            <button type="button" id="remove-signature" style="padding: 5px 10px; font-size: 12px; margin-top: 5px;">Remove</button>
+                        </div>
+                    </div>
+                    <small style="color: #666; display: block; margin-top: 5px;">Please upload an image of your signature. Acceptable formats: JPG, PNG, GIF.</small>
+                    @error('signature')
+                        <div style="color: red; margin-top: 5px;">{{ $message }}</div>
+                    @enderror
+                </div>
+                
                 <p>
-                    Signature (Enter initials): <input type="text" class="signature-input" id="employeeSignature" name="signature" placeholder="Enter Signature" required>
                     Date: <span class="date-display" id="currentDate"></span>
                 </p>
                 
@@ -268,9 +296,35 @@
 
     <script>
         document.addEventListener('DOMContentLoaded', function() {
+            // Display current date
             const currentDate = new Date();
             const options = { year: 'numeric', month: 'long', day: 'numeric' };
             document.getElementById('currentDate').textContent = currentDate.toLocaleDateString(undefined, options);
+            
+            // Signature upload preview functionality
+            const signatureInput = document.getElementById('signature');
+            const previewContainer = document.getElementById('signature-preview-container');
+            const previewImage = document.getElementById('signature-preview');
+            const removeButton = document.getElementById('remove-signature');
+            
+            signatureInput.addEventListener('change', function() {
+                if (this.files && this.files[0]) {
+                    const reader = new FileReader();
+                    
+                    reader.onload = function(e) {
+                        previewImage.src = e.target.result;
+                        previewContainer.style.display = 'block';
+                    }
+                    
+                    reader.readAsDataURL(this.files[0]);
+                }
+            });
+            
+            removeButton.addEventListener('click', function() {
+                signatureInput.value = '';
+                previewContainer.style.display = 'none';
+                previewImage.src = '#';
+            });
         });
     </script>
 </body>

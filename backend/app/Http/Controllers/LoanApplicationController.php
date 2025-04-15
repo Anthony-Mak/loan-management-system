@@ -12,21 +12,28 @@ use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use App\Models\Collateral;
 use \Log;
+use Storage;
 use Barryvdh\DomPDF\Facade\Pdf;
+use Google\Cloud\Storage\StorageClient;
+use App\Services\GoogleCloudStorageService;
+
 
 class LoanApplicationController extends Controller
 {
+    private $gcsService;
     /**
      * Display a listing of the user's loan applications
      */
-    public function __construct()
-{
-    Log::debug('Database configuration:', [
-        'connection' => config('database.default'),
-        'database' => config('database.connections.' . config('database.default') . '.database'),
-        'strict' => config('database.connections.' . config('database.default') . '.strict')
-    ]);
-}
+    public function __construct(GoogleCloudStorageService $gcsService)
+    {
+        $this->gcsService = $gcsService;
+
+        Log::debug('Database configuration:', [
+            'connection' => config('database.default'),
+            'database' => config('database.connections.' . config('database.default') . '.database'),
+            'strict' => config('database.connections.' . config('database.default') . '.strict')
+        ]);
+    }
     public function history()
     {
         $user = Auth::user();
@@ -124,9 +131,9 @@ class LoanApplicationController extends Controller
                 'employee_id' => $employeeId,
                 'loan_type_id' => $request->loan_type_id,
                 'amount' => $request->loan_amount,
-                'term_months' => $request->term_months,
+                'term_months' => $request->total_months,
                 'purpose' => $request->purpose,
-                'status' => 'Pending'
+                'status' => 'Pending Recommendation' 
             ]);
 
             Log::debug('Loan application created successfully:', [
@@ -185,215 +192,330 @@ class LoanApplicationController extends Controller
         }
         return view('employee.loan.loan_policy', compact('loan'));
     }
-
-public function storePolicyAcknowledgment(Request $request)
-{
-    Log::info('Policy Acknowledgment Method Called', [
-        'request_data' => $request->all(),
-        'user_id' => Auth::id(),
-        'employee_id' => Auth::user()->employee_id
-    ]);
-
-    try {
-        $request->validate([
-            'loan_id' => 'required|exists:loan_applications,loan_id',
-            'signature' => 'required|string|max:100'
-        ]);
-    } catch (\Illuminate\Validation\ValidationException $e) {
-        Log::error('Validation Failed in Policy Acknowledgment', [
-            'errors' => $e->errors(),
-            'input' => $request->all()
-        ]);
-        return back()->withErrors($e->validator)->withInput();
-    }
     
-    $loan = LoanApplication::findOrFail($request->loan_id);
-    
-    Log::info('Loan Details Found', [
-        'loan_id' => $loan->loan_id,
-        'employee_id' => $loan->employee_id,
-        'current_user_employee_id' => Auth::user()->employee_id
-    ]);
-
-    // Check if this loan belongs to the authenticated user
-    if ($loan->employee_id !== Auth::user()->employee_id) {
-        Log::error('Unauthorized policy acknowledgment attempt', [
-            'loan_id' => $request->loan_id,
-            'user_id' => Auth::user()->id,
+    public function storePolicyAcknowledgment(Request $request)
+    {
+        Log::info('Policy Acknowledgment Method Called', [
+            'request_data' => $request->all(),
+            'user_id' => Auth::id(),
             'employee_id' => Auth::user()->employee_id
         ]);
-        abort(403);
-    }
-    
-    Log::info('Redirecting to Pledge Form', [
-        'loan_id' => $loan->loan_id,
-        'route' => route('employee.loan.pledge', ['loan' => $loan->loan_id])
-    ]);
-    
-    return redirect()->route('employee.loan.pledge', ['loan' => $loan->loan_id])
-        ->with('success', 'Proceeding to pledge form.');
-}
- 
-public function showPledgeForm(Request $request, $loanId)
-{
-    Log::info('Pledge Form Method Called', [
-        'loan_id' => $loanId,
-        'current_user_id' => Auth::id(),
-        'current_employee_id' => Auth::user()->employee_id
-    ]);
 
-    try {
-        $loan = LoanApplication::with(['employee', 'loanType'])
-            ->findOrFail($loanId);
+        try {
+            $request->validate([
+                'loan_id' => 'required|exists:loan_applications,loan_id',
+                'signature' => 'required|image|max:2048'
+            ]);
+        } catch (\Illuminate\Validation\ValidationException $e) {
+            Log::error('Validation Failed in Policy Acknowledgment', [
+                'errors' => $e->errors(),
+                'input' => $request->all()
+            ]);
+            return back()->withErrors($e->validator)->withInput();
+        }
         
-        Log::info('Loan Retrieved for Pledge Form', [
-            'loan_details' => [
-                'id' => $loan->loan_id,
-                'employee_id' => $loan->employee_id,
-                'amount' => $loan->amount
-            ]
+        $loan = LoanApplication::findOrFail($request->loan_id);
+        
+        Log::info('Loan Details Found', [
+            'loan_id' => $loan->loan_id,
+            'employee_id' => $loan->employee_id,
+            'current_user_employee_id' => Auth::user()->employee_id
         ]);
-        
+
         // Check if this loan belongs to the authenticated user
         if ($loan->employee_id !== Auth::user()->employee_id) {
-            Log::warning('Unauthorized access attempt to pledge form', [
-                'loan_id' => $loanId,
-                'requesting_user_id' => Auth::id(),
-                'loan_owner_id' => $loan->employee_id
+            Log::error('Unauthorized policy acknowledgment attempt', [
+                'loan_id' => $request->loan_id,
+                'user_id' => Auth::user()->id,
+                'employee_id' => Auth::user()->employee_id
             ]);
+            abort(403);
+        }
+
+        // Upload signature to Google Cloud Storage
+        if ($request->hasFile('signature')) {
+            try {
+                // Generate a unique file name
+                $fileName = 'signatures/' . Auth::user()->employee_id . '_' . time() . '_' .uniqid() . '.' . $request->file('signature')->extension();
+
+                // Upload the file to Google Cloud Storage
+                $fileContents = file_get_contents($request->file('signature')->getRealPath());
+
+                Log::debug('Attempting to upload file to GCS', [
+                    'fileName' => $fileName,
+                    'fileSize' => strlen($fileContents),
+                    'bucketName' => config('filesystems.disks.gcs.bucket')
+                ]);
+
+
+                $success = $this->gcsService->put($fileName, $fileContents);
+
+                if (!$success) {
+                    throw new \Exception('Upload failed - gcsService->put returned false');
+                }
+
+                if (!$this->gcsService->exists($fileName)) {
+                    throw new \Exception('File was supposedly uploaded but does not exist in storage');
+                }Log::info('File successfully uploaded to GCS', ['fileName' => $fileName]);
+
+                
+
+                // Get the URL of the uploaded file
+                $signatureUrl = $this->gcsService->url($fileName);
+                
+                
+                // Update the loan with the signature URL
+                $loan->update([
+                    'pledge_signature' => $signatureUrl
+                ]);
+
+                Log::info('Signature uploaded successfully', [
+                    'loan_id' => $loan->loan_id,
+                    'signature_url' => $signatureUrl
+                ]);} 
+                catch (\Exception $e) {
+                    Log::error('Failed to upload signature', [
+                        'error' => $e->getMessage(),
+                        'loan_id' => $loan->loan_id
+                    ]);
+                    return back()->with('error', 'Failed to upload signature: ' . $e->getMessage());
+                }
+            }
+
+        
+        Log::info('Redirecting to Pledge Form', [
+            'loan_id' => $loan->loan_id,
+            'route' => route('employee.loan.pledge', ['loan' => $loan->loan_id])
+        ]);
+        
+        return redirect()->route('employee.loan.pledge', ['loan' => $loan->loan_id])
+            ->with('success', 'Proceeding to pledge form.');
+    }
+ 
+    public function showPledgeForm(Request $request, $loanId)
+    {
+        Log::info('Pledge Form Method Called', [
+            'loan_id' => $loanId,
+            'current_user_id' => Auth::id(),
+            'current_employee_id' => Auth::user()->employee_id
+        ]);
+
+        try {
+            $loan = LoanApplication::with(['employee', 'loanType'])
+                ->findOrFail($loanId);
+            
+            Log::info('Loan Retrieved for Pledge Form', [
+                'loan_details' => [
+                    'id' => $loan->loan_id,
+                    'employee_id' => $loan->employee_id,
+                    'amount' => $loan->amount
+                ]
+            ]);
+            
+            // Check if this loan belongs to the authenticated user
+            if ($loan->employee_id !== Auth::user()->employee_id) {
+                Log::warning('Unauthorized access attempt to pledge form', [
+                    'loan_id' => $loanId,
+                    'requesting_user_id' => Auth::id(),
+                    'loan_owner_id' => $loan->employee_id
+                ]);
+                abort(403, 'Unauthorized access');
+            }
+
+            return view('employee.loan.pledge_form', compact('loan'));
+        } catch (\Exception $e) {
+            Log::error('Error in Pledge Form Method', [
+                'error_message' => $e->getMessage(),
+                'loan_id' => $loanId
+            ]);
+            
+            return redirect()->route('employee.dashboard')
+                ->with('error', 'Unable to load pledge form: ' . $e->getMessage());
+        }
+    }
+
+    public function storePledge(Request $request)
+    {
+        $validated = $request->validate([
+            'loan_id' => 'required|exists:loan_applications,loan_id',
+            'name' => 'required|string|max:100',
+            'national_id' => 'required|string|max:30',
+            'address' => 'required|string',
+            'location' => 'required|string|max:100',
+            'signature' => 'required|image|max:2048',
+            'registration_number' => 'nullable|string|max:20',
+            'assets' => 'required|array',
+            'assets.*.description' => 'nullable|string',
+            'assets.*.value' => 'nullable|numeric'
+        ]);
+
+        $loan = LoanApplication::findOrFail($request->loan_id);
+
+        // Check if this loan belongs to the authenticated user
+        if ($loan->employee_id !== Auth::user()->employee_id) {
             abort(403, 'Unauthorized access');
         }
 
-        return view('employee.loan.pledge_form', compact('loan'));
-    } catch (\Exception $e) {
-        Log::error('Error in Pledge Form Method', [
-            'error_message' => $e->getMessage(),
-            'loan_id' => $loanId
-        ]);
-        
-        return redirect()->route('employee.dashboard')
-            ->with('error', 'Unable to load pledge form: ' . $e->getMessage());
-    }
-}
+        DB::beginTransaction();
+        try {
+            // Upload signature using custom GCS service
+            $signatureUrl = null;
+            if ($request->hasFile('signature')) {
+                // Generate a unique file name
+                $fileName = 'signatures/' . Auth::user()->employee_id . '_' . time() . '_' .uniqid() . '.' . $request->file('signature')->extension();
+                
+                // Upload the file using your custom service
+                $fileContents = file_get_contents($request->file('signature')->getRealPath());
 
-public function storePledge(Request $request)
-{
-    $validated = $request->validate([
-        'loan_id' => 'required|exists:loan_applications,loan_id',
-        'name' => 'required|string|max:100',
-        'national_id' => 'required|string|max:30',
-        'address' => 'required|string',
-        'location' => 'required|string|max:100',
-        'signature' => 'required|string|max:100',
-        'registration_number' => 'nullable|string|max:20',
-        'assets' => 'required|array',
-        'assets.*.description' => 'nullable|string',
-        'assets.*.value' => 'nullable|numeric'
-    ]);
-
-    $loan = LoanApplication::findOrFail($request->loan_id);
-
-    // Check if this loan belongs to the authenticated user
-    if ($loan->employee_id !== Auth::user()->employee_id) {
-        abort(403, 'Unauthorized access');
-    }
-
-    DB::beginTransaction();
-    try {
-        // Update loan with pledge acknowledgment
-        $loan->update([
-            'pledge_acknowledged' => true,
-            'pledge_signature' => $request->signature,
-            'pledge_date' => now()
-        ]);
-
-        // Store the assets as collateral
-        $hasValidAsset = false;
-        foreach ($request->assets as $asset) {
-            if (!empty($asset['description']) && !empty($asset['value'])) {
-                Collateral::create([
-                    'loan_id' => $loan->loan_id,
-                    'asset_description' => $asset['description'],
-                    'estimated_value' => $asset['value'],
-                    'vehicle_registration_number' => $request->registration_number,
-                    'signature' => $request->signature,
-                    'location' => $request->location
+                Log::debug('Preparing to upload file to GCS', [
+                    'fileName' => $fileName,
+                    'fileSize' => strlen($fileContents),
+                    'bucketName' => config('filesystems.disks.gcs.bucket')
                 ]);
-                $hasValidAsset = true;
+
+                $success = $this->gcsService->put($fileName, $fileContents);
+
+                if (!$success) {
+                    throw new \Exception('Upload failed - gcsService->put returned false');
+                }
+                
+                if (!$this->gcsService->exists($fileName)) {
+                    throw new \Exception('File was supposedly uploaded but does not exist in bucket');
+                }
+                
+                Log::info('File successfully uploaded to GCS', ['fileName' => $fileName]);
+
+                // Get the URL of the uploaded file
+                $signatureUrl = $this->gcsService->url($fileName);
             }
+            
+            // Update loan with pledge acknowledgment
+            $loan->update([
+                'pledge_acknowledged' => true,
+                'pledge_signature' => $signatureUrl,
+                'pledge_date' => now()
+            ]);
+
+            // Store the assets as collateral
+            $hasValidAsset = false;
+            foreach ($request->assets as $asset) {
+                if (!empty($asset['description']) && !empty($asset['value'])) {
+                    Collateral::create([
+                        'loan_id' => $loan->loan_id,
+                        'asset_description' => $asset['description'],
+                        'estimated_value' => $asset['value'],
+                        'vehicle_registration_number' => $request->registration_number,
+                        'signature' => $signatureUrl,
+                        'location' => $request->location
+                    ]);
+                    $hasValidAsset = true;
+                }
+            }
+
+            if (!$hasValidAsset) {
+                throw new \Exception('At least one asset must be pledged.');
+            }
+
+            // Update loan status to "Pending"
+            $loan->update(['status' => 'Pending Recommendation']);
+
+            DB::commit();
+
+            Log::info('Pledge Submission Successful', [
+                'loan_id' => $loan->loan_id,
+                'assets_count' => count($request->assets),
+                'redirect_route' => 'employee.dashboard'
+            ]);
+
+            return redirect()->route('employee.dashboard')
+                ->with('success', 'Loan application has been successfully submitted with pledged assets.');
+        } catch (\Exception $e) {
+            Log::error('Pledge Submission Failed', [
+                'error' => $e->getMessage(),
+                'loan_id' => $request->loan_id
+            ]);
+            DB::rollBack();
+            return back()
+                ->withInput()
+                ->with('error', 'Failed to submit pledge information: ' . $e->getMessage());
         }
-
-        if (!$hasValidAsset) {
-            throw new \Exception('At least one asset must be pledged.');
-        }
-
-        // Update loan status to "Submitted"
-        $loan->update(['status' => 'pending']);
-
-        DB::commit();
-
-        Log::info('Pledge Submission Successful', [
-            'loan_id' => $loan->loan_id,
-            'assets_count' => count($request->assets),
-            'redirect_route' => 'employee.dashboard'
-        ]);
-
-        return redirect()->route('employee.dashboard')
-            ->with('success', 'Loan application has been successfully submitted with pledged assets.');
-    } catch (\Exception $e) {
-        Log::error('Pledge Submission Failed', [
-            'error' => $e->getMessage(),
-            'loan_id' => $request->loan_id
-        ]);
-        DB::rollBack();
-        return back()
-            ->withInput()
-            ->with('error', 'Failed to submit pledge information: ' . $e->getMessage());
     }
-}
     
     /**
      * Generate PDF for HR download
-     */
-    private function generatePDF($loanId)
-    {
-        // Implement PDF generation logic here
-        // You can use packages like barryvdh/laravel-dompdf
-        return true;
-    }
-
-    /**
-     * PDF download route
-     */
+    */
     public function downloadPDF($loanId)
-{
-    $loan = LoanApplication::with([
-        'employee', 
-        'employee.bankingDetails', 
-        'loanType'
-    ])->findOrFail($loanId);
-    
-    // Authorization check remains the same
-    if (Auth::user()->employee_id !== $loan->employee_id && Auth::user()->role !== 'hr') {
-        abort(403, 'Unauthorized access');
-    }
+    {
+        $loan = LoanApplication::with([
+            'employee', 
+            'employee.bankingDetails', 
+            'loanType'
+        ])->findOrFail($loanId);
+        
+        // Authorization check remains the same
+        if (Auth::user()->employee_id !== $loan->employee_id && Auth::user()->role !== 'hr') {
+            abort(403, 'Unauthorized access');
+        }
 
-    if (!$loan->employee) {
-        return back()->with('error', 'Employee data not found for this loan application.');
+        if (!$loan->employee) {
+            return back()->with('error', 'Employee data not found for this loan application.');
+        }
+        
+        $collaterals = Collateral::where('loan_id', $loanId)->get();
+        
+        // Handle the signature
+        if (!empty($loan->pledge_signature)) {
+            try {
+                // Extract the file path from the URL
+                $signaturePath = parse_url($loan->pledge_signature, PHP_URL_PATH);
+                $signaturePath = ltrim($signaturePath, '/');
+                
+                // Remove bucket name from path if present
+                $bucketName = config('filesystems.disks.gcs.bucket');
+                $signaturePath = str_replace($bucketName . '/', '', $signaturePath);
+                
+                Log::debug('Attempting to retrieve signature from GCS', [
+                    'signaturePath' => $signaturePath,
+                    'originalUrl' => $loan->pledge_signature
+                ]);
+                
+                // Check if file exists in bucket
+                if ($this->gcsService->exists($signaturePath)) {
+                    // Get file contents
+                    $signatureContents = $this->gcsService->get($signaturePath);
+                    
+                    // Convert to base64 for embedding in PDF
+                    $base64Signature = 'data:image/png;base64,' . base64_encode($signatureContents);
+                    
+                    // Update the signature URL with the base64 data
+                    $loan->pledge_signature = $base64Signature;
+                    
+                    Log::info('Successfully retrieved signature from GCS', [
+                        'signaturePath' => $signaturePath
+                    ]);
+                } else {
+                    Log::warning('Signature file not found in GCS', [
+                        'signaturePath' => $signaturePath
+                    ]);
+                }
+            } catch (\Exception $e) {
+                Log::error('Error retrieving signature from GCS', [
+                    'error' => $e->getMessage(),
+                    'file' => $e->getFile(),
+                    'line' => $e->getLine()
+                ]);
+            }
+        }
+        
+        $data = [
+            'loan' => $loan,
+            'employee' => $loan->employee,
+            'bankingDetails' => $loan->employee ? $loan->employee->bankingDetails : null,
+            'collaterals' => $collaterals
+        ];
+        
+        $pdf = Pdf::loadView('pdf.loan-application', $data);
+        
+        return $pdf->download('loan_application_'.$loanId.'.pdf');
     }
-    
-    $collaterals = Collateral::where('loan_id', $loanId)->get();
-    
-    //Check if employee exists before accessing bankingDetails
-    $data = [
-        'loan' => $loan,
-        'employee' => $loan->employee,
-        'bankingDetails' => $loan->employee ? $loan->employee->bankingDetails : null,
-        'collaterals' => $collaterals
-    ];
-    
-    $pdf = Pdf::loadView('pdf.loan-application', $data);
-    
-    return $pdf->download('loan_application_'.$loanId.'.pdf');
-}
 }

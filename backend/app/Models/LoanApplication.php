@@ -21,6 +21,7 @@ class LoanApplication extends Model
         'status',
         'review_notes',
         'processed_by',
+        'pledge_signature',
         'processed_date'
     ];
     

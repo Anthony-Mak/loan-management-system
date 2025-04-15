@@ -4,6 +4,7 @@ namespace App\Providers;
 
 use Illuminate\Support\ServiceProvider;
 use Illuminate\Support\Facades\DB;
+use App\Services\GoogleCloudStorageService;
 use \Log;
 
 class AppServiceProvider extends ServiceProvider
@@ -13,7 +14,9 @@ class AppServiceProvider extends ServiceProvider
      */
     public function register(): void
     {
-        //
+        $this->app->singleton(GoogleCloudStorageService::class, function ($app) {
+            return new GoogleCloudStorageService();
+        });
     }
 
     /**

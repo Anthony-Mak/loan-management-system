@@ -4,111 +4,124 @@
     <meta http-equiv="Content-Type" content="text/html; charset=utf-8"/>
     <title>Staff Loan Application Form</title>
     <style>
+     @font-face {
+        font-family: 'Billy Ohio';
+        src: url('https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/webfonts/billy-ohio.woff2') format('woff2');
+        }
         body {
-            font-family: Arial, sans-serif;
-            font-size: 12px;
-            line-height: 1.3;
-            color: #333;
-        }
-        .header {
-            text-align: center;
-            margin-bottom: 20px;
-        }
-        .logo {
-            width: 150px;
-            margin-bottom: 10px;
-        }
-        .title {
-            font-size: 18px;
-            font-weight: bold;
-            text-transform: uppercase;
-            margin-bottom: 5px;
-        }
-        .subtitle {
-            font-size: 14px;
-            margin-bottom: 5px;
-        }
-        .section {
-            margin-bottom: 15px;
-        }
-        .section-title {
-            font-size: 14px;
-            font-weight: bold;
-            margin-bottom: 8px;
-            text-transform: uppercase;
-            border-bottom: 1px solid #333;
-            padding-bottom: 3px;
-        }
-        table {
-            width: 100%;
-            border-collapse: collapse;
-            margin-bottom: 15px;
-        }
-        table td, table th {
-            padding: 5px;
-            border: 1px solid #ddd;
-            vertical-align: top;
-        }
-        table th {
-            font-weight: bold;
-            background-color: #f2f2f2;
-            text-align: left;
-        }
-        .label {
-            font-weight: bold;
-            width: 40%;
-        }
-        .footer {
-            margin-top: 20px;
-            text-align: center;
-            font-size: 10px;
-            color: #777;
-        }
-        .page-break {
-            page-break-after: always;
-        }
-        .signature-box {
-            border: 1px solid #333;
-            height: 70px;
-            margin-top: 10px;
-            position: relative;
-        }
-        .signature-line {
-            border-bottom: 1px solid #333;
-            position: absolute;
-            bottom: 15px;
-            left: 5px;
-            right: 5px;
-        }
-        .signature-label {
-            position: absolute;
-            bottom: 0;
-            left: 0;
-            right: 0;
-            text-align: center;
-            font-style: italic;
-            font-size: 10px;
-        }
-        .checkbox {
-            width: 15px;
-            height: 15px;
-            border: 1px solid #333;
-            display: inline-block;
-            margin-right: 5px;
-        }
-        .checkbox.checked:after {
-            content: "✓";
-            position: relative;
-            top: -5px;
-            font-weight: bold;
-        }
-        .declaration {
-            border: 1px solid #333;
-            padding: 10px;
-            margin-top: 15px;
-            font-style: italic;
-        }
+    font-family: Arial, sans-serif;
+    font-size: 12px;
+    line-height: 1.3;
+    color: #333;
+    }
+    .header {
+        text-align: center;
+        margin-bottom: 20px;
+    }
+    .logo {
+        width: 150px;
+        margin-bottom: 10px;
+    }
+    .title {
+        font-size: 18px;
+        font-weight: bold;
+        text-transform: uppercase;
+        margin-bottom: 5px;
+    }
+    .subtitle {
+        font-size: 14px;
+        margin-bottom: 5px;
+    }
+    .section {
+        margin-bottom: 15px;
+    }
+    .section-title {
+        font-size: 14px;
+        font-weight: bold;
+        margin-bottom: 8px;
+        text-transform: uppercase;
+        border-bottom: 1px solid #333;
+        padding-bottom: 3px;
+    }
+    table {
+        width: 100%;
+        border-collapse: collapse;
+        margin-bottom: 15px;
+    }
+    table td, table th {
+        padding: 5px;
+        border: 1px solid #ddd;
+        vertical-align: top;
+    }
+    table th {
+        font-weight: bold;
+        background-color: #f2f2f2;
+        text-align: left;
+    }
+    .label {
+        font-weight: bold;
+        width: 40%;
+    }
+    .footer {
+        margin-top: 20px;
+        text-align: center;
+        font-size: 10px;
+        color: #777;
+    }
+    .page-break {
+        page-break-after: always;
+    }
+    .signature-box {
+        border: 1px solid #333;
+        height: 70px;
+        margin-top: 10px;
+        position: relative;
+    }
+    .signature-line {
+        border-bottom: 1px solid #333;
+        position: absolute;
+        bottom: 15px;
+        left: 5px;
+        right: 5px;
+    }
+    .signature-label {
+        position: absolute;
+        bottom: 0;
+        left: 0;
+        right: 0;
+        text-align: center;
+        font-style: italic;
+        font-size: 10px;
+    }
+    .checkbox {
+        width: 15px;
+        height: 15px;
+        border: 1px solid #333;
+        display: inline-block;
+        margin-right: 5px;
+    }
+    .checkbox.checked:after {
+        content: "✓";
+        position: relative;
+        top: -5px;
+        font-weight: bold;
+    }
+    .declaration {
+        border: 1px solid #333;
+        padding: 10px;
+        margin-top: 15px;
+    }
+    .auto-date {
+        font-family: 'Billy Ohio', cursive;
+        font-size: 18px;
+    }
+    .instruction-block {
+        border: 1px solid #333;
+        padding: 10px;
+        margin-top: 15px;
+    }
     </style>
+    @vite(['resources/css/pdf-loan.css'])
 </head>
 <body>
     <div class="header">
@@ -347,9 +360,11 @@
         </table>
     </div>
 
-    <div class="declaration">
-        <p><strong>DECLARATION BY APPLICANT:</strong> I hereby declare that the information provided is true and accurate. I understand that providing false information may lead to rejection of my application and/or legal consequences.</p>
-        <p>I authorize ZWMB Bank Limited to verify information provided in this application and to obtain any additional information required for the assessment of this loan application.</p>
+    <div class="section">
+        <div class="section-title">DECLARATION BY APPLICANT</div>
+        <div class="declaration">
+            I hereby certify that all the particulars given by me are true and complete. I confirm that I have read the terms and conditions governing the granting of staff credit facilities, and agree to be bound by them. I also hereby authorize ZWMB to pay any terminal benefits or final salary directly to set off the loan balance in the event of termination of my employment whilst the loan is still outstanding. I agree and understand that this agreement will remain in force until it is cancelled in writing by me and confirmed by ZWMB.
+        </div>
     </div>
 
     <table style="border: none; margin-top: 20px;">
@@ -357,17 +372,23 @@
             <td style="border: none; width: 50%;">
                 <div style="margin-top: 15px;">
                     <div>Applicant's Signature:</div>
-                    <div class="signature-box">
-                        <div class="signature-line"></div>
-                        <div class="signature-label">Signature</div>
-                    </div>
+                        <div class="signature-box">
+                            @if(isset($loan->pledge_signature))
+                                <img src="{{ $loan->pledge_signature }}" alt="Applicant Signature" style="max-width: 100%; max-height: 60px;">
+                            @else
+                                <div class="signature-line"></div>
+                                <div class="signature-label">Signature</div>
+                            @endif
+                        </div>
                 </div>
             </td>
             <td style="border: none; width: 50%;">
                 <div style="margin-top: 15px;">
                     <div>Date:</div>
                     <div class="signature-box">
-                        <div class="signature-line"></div>
+                        <div style="text-align: center; padding-top: 25px;" id="current-date">
+                            {{ date('d/m/Y') }}
+                        </div>
                         <div class="signature-label">Date</div>
                     </div>
                 </div>
@@ -375,80 +396,91 @@
         </tr>
     </table>
 
+    <div class="instruction-block">
+        I instruct ZWMB to credit the loan amount approved to my Account number. ................................................................................. at......................................................... Bank, ................................................................Branch. In the event that the amount I qualify for is less than the amount requested, I authorize the bank to disburse the sanctioned amount and confirm that the above declaration holds for the new amount as well.
+    </div>
+
     <div class="page-break"></div>
 
     <div class="section">
-        <div class="section-title">For Official Use Only</div>
+        <div class="section-title">RECOMMENDATIONS</div>
         <table>
             <tr>
-                <td class="label">Application Received By</td>
-                <td></td>
+                <th colspan="4">1. Immediate Supervisor/Manager's Recommendations:</th>
             </tr>
             <tr>
-                <td class="label">Date Received</td>
-                <td></td>
+                <td>Recommended:</td>
+                <td>Not Recommended:</td>
+                <td>Deferred:</td>
+                <td>Declined:</td>
             </tr>
             <tr>
-                <td class="label">Application Status</td>
-                <td>
-                    <div class="checkbox"></div> Approved
-                    <div class="checkbox"></div> Declined
-                    <div class="checkbox"></div> Pending Further Information
-                </td>
+                <td colspan="4">Amount Recommended ($)</td>
             </tr>
             <tr>
-                <td class="label">Approved Amount</td>
-                <td>$</td>
+                <td colspan="2">Signature:</td>
+                <td colspan="2">Date:</td>
             </tr>
             <tr>
-                <td class="label">Interest Rate</td>
-                <td>%</td>
+                <th colspan="4">2. Head of Department's Recommendations:</th>
             </tr>
             <tr>
-                <td class="label">Repayment Period</td>
-                <td></td>
+                <td>Recommended:</td>
+                <td>Not Recommended:</td>
+                <td>Deferred:</td>
+                <td>Declined:</td>
             </tr>
             <tr>
-                <td class="label">Monthly Installment</td>
-                <td>$</td>
+                <td colspan="4">Amount Recommended ($)</td>
             </tr>
             <tr>
-                <td class="label">Comments/Conditions</td>
-                <td style="height: 80px;"></td>
+                <td colspan="2">Signature:</td>
+                <td colspan="2">Date:</td>
+            </tr>
+            <tr>
+                <th colspan="4">3. Human Resources' Recommendations:</th>
+            </tr>
+            <tr>
+                <td>Recommended:</td>
+                <td>Not Recommended:</td>
+                <td>Deferred:</td>
+                <td>Declined:</td>
+            </tr>
+            <tr>
+                <td colspan="4">Amount Recommended ($)</td>
+            </tr>
+            <tr>
+                <td colspan="2">Signature:</td>
+                <td colspan="2">Date:</td>
             </tr>
         </table>
+    </div>
 
-        <table style="border: none; margin-top: 30px;">
-            <tr style="border: none;">
-                <td style="border: none; width: 50%;">
-                    <div>Approved By:</div>
-                    <div class="signature-box">
-                        <div class="signature-line"></div>
-                        <div class="signature-label">Credit Officer</div>
-                    </div>
-                </td>
-                <td style="border: none; width: 50%;">
-                    <div>Date:</div>
-                    <div class="signature-box">
-                        <div class="signature-line"></div>
-                        <div class="signature-label">Date</div>
-                    </div>
-                </td>
+    <div class="section">
+        <div class="section-title">CHIEF EXECUTIVE OFFICER OR CHIEF FINANCE OFFICER</div>
+        <table>
+            <tr>
+                <td colspan="2">COMMENTS:</td>
             </tr>
-            <tr style="border: none;">
-                <td style="border: none; width: 50%;" colspan="2">
-                    <div style="margin-top: 20px;">Final Approval By:</div>
-                    <div class="signature-box">
-                        <div class="signature-line"></div>
-                        <div class="signature-label">Credit Manager/Director</div>
-                    </div>
-                </td>
+            <tr>
+                <td style="height: 60px;" colspan="2"></td>
+            </tr>
+            <tr>
+                <td>Approved: <div class="checkbox"></div></td>
+                <td>Declined: <div class="checkbox"></div></td>
+            </tr>
+            <tr>
+                <td colspan="2">Amount Approved ($)</td>
+            </tr>
+            <tr>
+                <td>Signature:</td>
+                <td>Date:</td>
             </tr>
         </table>
     </div>
 
     <div class="footer">
-        <p>ZWMB Bank Limited | Loan Application Form | Page 2 of 2</p>
+        <p>ZWMB Bank Limited | Loan Application Form | Page 3 of 3</p>
     </div>
 </body>
 </html>

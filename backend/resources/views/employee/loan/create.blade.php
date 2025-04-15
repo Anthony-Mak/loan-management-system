@@ -500,6 +500,7 @@
                         <td>
                             Year(s): <input type="number" name="loan_years" id="loanYears" min="0" max="30" value="{{ old('loan_years', 0) }}">
                             Month(s): <input type="number" name="term_months" id="loanMonths" min="0" max="11" value="{{ old('term_months') }}" required>
+                            <input type="hidden" name="total_months" id="totalMonths" value="{{ old('term_months') }}">
                             <div class="hint">The loan period must be at least 1 month and not exceed 30 years</div>
                             @error('loan_years')
                                 <div class="text-danger">{{ $message }}</div>
@@ -824,6 +825,8 @@
                     document.getElementById('loanYears').style.borderColor = 'red';
                     document.getElementById('loanMonths').style.borderColor = 'red';
                     alert('Please specify a loan period');
+                }else {
+                     updateTotalMonths();
                 }
                 
                 // Validate specific purpose "Other" field
@@ -845,6 +848,42 @@
             
             return isValid;
         }
+
+        //Years and months handling
+       
+
+       
+        document.addEventListener('DOMContentLoaded', function() {
+            const loanYearsField = document.getElementById('loanYears');
+            const loanMonthsField = document.getElementById('loanMonths');
+            
+            if (loanYearsField && loanMonthsField) {
+                // Add event listeners to update whenever either field changes
+                loanYearsField.addEventListener('input', updateTotalMonths);
+                loanMonthsField.addEventListener('input', updateTotalMonths);
+                
+                // Initialize the value on page load
+                updateTotalMonths();
+            }
+            
+            // Also update on form submission
+            document.getElementById('loanApplicationForm').addEventListener('submit', function() {
+                updateTotalMonths();
+            });
+        });
+
+         function updateTotalMonths() {
+            const years = parseInt(document.getElementById('loanYears').value) || 0;
+            const months = parseInt(document.getElementById('loanMonths').value) || 0;
+            
+            // Calculate total months
+            const totalMonths = (years * 12) + months;
+            
+            // Set the value to the hidden field that will be sent to the database
+            document.getElementById('totalMonths').value = totalMonths;
+        }
+
+
 
         // Show/hide additional fields based on ZWMB account selection
         function toggleYearsInput(action) {
@@ -972,51 +1011,57 @@
             }
         });
 
-        // Simple number to words converter (simplified version)
+        //Numbers to words
         function numberToWords(num) {
+            if (num === 0) return 'Zero Dollars';
+            
             const ones = ['', 'One', 'Two', 'Three', 'Four', 'Five', 'Six', 'Seven', 'Eight', 'Nine',
                         'Ten', 'Eleven', 'Twelve', 'Thirteen', 'Fourteen', 'Fifteen', 'Sixteen',
                         'Seventeen', 'Eighteen', 'Nineteen'];
             const tens = ['', '', 'Twenty', 'Thirty', 'Forty', 'Fifty', 'Sixty', 'Seventy', 'Eighty', 'Ninety'];
             const scales = ['', 'Thousand', 'Million', 'Billion', 'Trillion'];
             
-            if (num === 0) return 'Zero Dollars';
-            
             // Handle decimal part
             const decimalPart = Math.round((num % 1) * 100);
-            const dollarPart = Math.floor(num);
+            let dollarPart = Math.floor(num);
             
-            let result = '';
-            
-            // Convert dollar part (simplified for demo)
-            if (dollarPart > 0) {
-                if (dollarPart < 20) {
-                    result = ones[dollarPart];
-                } else if (dollarPart < 100) {
-                    result = tens[Math.floor(dollarPart / 10)] + (dollarPart % 10 !== 0 ? '-' + ones[dollarPart % 10] : '');
-                } else {
-                    result = 'Amount too large for simple converter';
+            function convertLessThanOneThousand(n) {
+                if (n === 0) return '';
+                else if (n < 20) return ones[n];
+                else if (n < 100) return tens[Math.floor(n / 10)] + (n % 10 !== 0 ? '-' + ones[n % 10] : '');
+                else {
+                    return ones[Math.floor(n / 100)] + ' Hundred' + (n % 100 !== 0 ? ' and ' + convertLessThanOneThousand(n % 100) : '');
                 }
-                
-                result += ' Dollar' + (dollarPart === 1 ? '' : 's');
             }
+            
+            // Convert the whole number part
+            let result = '';
+            let index = 0;
+            
+            do {
+                const chunk = dollarPart % 1000;
+                if (chunk !== 0) {
+                    const chunkWords = convertLessThanOneThousand(chunk);
+                    result = chunkWords + (scales[index] ? ' ' + scales[index] : '') + (result ? ' ' + result : '');
+                }
+                index++;
+                dollarPart = Math.floor(dollarPart / 1000);
+            } while (dollarPart > 0);
+            
+            result = result.trim() + ' Dollar' + (Math.floor(num) === 1 ? '' : 's');
             
             // Add cents part
             if (decimalPart > 0) {
-                if (result !== '') {
-                    result += ' and ';
-                }
-                
+                result += ' and ';
                 if (decimalPart < 20) {
                     result += ones[decimalPart];
                 } else {
                     result += tens[Math.floor(decimalPart / 10)] + (decimalPart % 10 !== 0 ? '-' + ones[decimalPart % 10] : '');
                 }
-                
                 result += ' Cent' + (decimalPart === 1 ? '' : 's');
             }
             
-            return result;
+            return result.trim();
         }
     </script>
 </body>

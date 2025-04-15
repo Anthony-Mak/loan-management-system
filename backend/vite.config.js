@@ -12,6 +12,7 @@ export default defineConfig({
                 'resources/js/app.js',
                 'resources/css/create-application.css',
                 'resources/css/employee.css',
+                'resources/css/auth.css',
             ],
             refresh: true,
         }),

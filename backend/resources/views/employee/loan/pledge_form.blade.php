@@ -168,6 +168,21 @@
         .container {
             margin-top: 80px; /* To prevent content from being hidden behind fixed navbar */
         }
+        /* Signature upload styles */
+        .signature-upload-container {
+            margin-bottom: 15px;
+        }
+        .preview-container {
+            margin-top: 10px;
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            display: inline-block;
+        }
+        #signature-preview {
+            max-width: 300px;
+            max-height: 150px;
+        }
     </style>
 </head>
 <body>
@@ -189,7 +204,7 @@
     <div class="container">
         <h1>Pledge Agreement</h1>
 
-        <form method="POST" action="{{ route('employee.loan.pledge.store', ['loan' => $loan->loan_id]) }}" id="pledgeForm">
+        <form method="POST" action="{{ route('employee.loan.pledge.store', ['loan' => $loan->loan_id]) }}" id="pledgeForm" enctype="multipart/form-data">
             @csrf
             <input type="hidden" name="loan_id" value="{{ $loan->loan_id }}">
 
@@ -246,12 +261,20 @@
                     on this <span id="currentDateDisplay"></span>
                 </p>
                 
-                <p>
-                    Signature: <input type="text" class="input-field" id="signature" name="signature" placeholder="Your Full Name as Signature" value="{{ old('signature') }}" required>
+                <div class="form-group">
+                    <label for="signature">Your Signature:</label>
+                    <div class="signature-upload-container">
+                        <input type="file" id="signature" name="signature" accept="image/*" required class="signature-upload">
+                        <div class="preview-container" id="signature-preview-container" style="display: none;">
+                            <img id="signature-preview" src="#" alt="Signature Preview">
+                            <button type="button" id="remove-signature" style="padding: 5px 10px; font-size: 12px; margin-top: 5px;">Remove</button>
+                        </div>
+                    </div>
+                    <small style="color: #666; display: block; margin-top: 5px;">Please upload an image of your signature. Acceptable formats: JPG, PNG, GIF.</small>
                     @error('signature')
-                        <span class="error">{{ $message }}</span>
+                        <div style="color: red; margin-top: 5px;">{{ $message }}</div>
                     @enderror
-                </p>
+                </div>
                 
                 <a href="{{ route('employee.loan.policy', ['loan' => $loan->loan_id]) }}" class="btn btn-secondary">Back</a>
                 <button type="submit" id="finishButton">Submit Pledge</button>
@@ -290,6 +313,31 @@
                 showNotification(successMessage);
             }
             
+            // Signature upload preview functionality
+            const signatureInput = document.getElementById('signature');
+            const previewContainer = document.getElementById('signature-preview-container');
+            const previewImage = document.getElementById('signature-preview');
+            const removeButton = document.getElementById('remove-signature');
+            
+            signatureInput.addEventListener('change', function() {
+                if (this.files && this.files[0]) {
+                    const reader = new FileReader();
+                    
+                    reader.onload = function(e) {
+                        previewImage.src = e.target.result;
+                        previewContainer.style.display = 'block';
+                    }
+                    
+                    reader.readAsDataURL(this.files[0]);
+                }
+            });
+            
+            removeButton.addEventListener('click', function() {
+                signatureInput.value = '';
+                previewContainer.style.display = 'none';
+                previewImage.src = '#';
+            });
+            
             document.getElementById('pledgeForm').addEventListener('submit', function(event) {
                 let isValid = true;
                 let hasAtLeastOneAsset = false;
@@ -298,14 +346,32 @@
                 const requiredFields = ['name', 'nationalId', 'address', 'location', 'signature'];
                 requiredFields.forEach(fieldId => {
                     const field = document.getElementById(fieldId);
+                    if (fieldId === 'signature') {
+                        // Skip text validation for file input
+                        return;
+                    }
+                    
                     const errorElement = document.getElementById(fieldId + 'Error');
                     if (!field.value.trim()) {
-                        errorElement.style.display = 'block';
+                        if (errorElement) {
+                            errorElement.textContent = 'This field is required';
+                            errorElement.style.display = 'block';
+                        }
                         isValid = false;
-                    } else {
+                    } else if (errorElement) {
                         errorElement.style.display = 'none';
                     }
                 });
+                
+                // Validate signature file is selected
+                if (!signatureInput.files || signatureInput.files.length === 0) {
+                    const errorElement = document.querySelector('[id$="signatureError"]');
+                    if (errorElement) {
+                        errorElement.textContent = 'Please upload your signature';
+                        errorElement.style.display = 'block';
+                    }
+                    isValid = false;
+                }
                 
                 // Check if at least one asset is entered
                 for (let i = 1; i <= 6; i++) {
